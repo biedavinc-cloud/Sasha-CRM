@@ -1,0 +1,137 @@
+{
+  "name": "Referral",
+  "type": "object",
+  "properties": {
+    "referral_id": {
+      "type": "string"
+    },
+    "partner_id": {
+      "type": "string"
+    },
+    "partner_user_id": {
+      "type": "string"
+    },
+    "partner_name": {
+      "type": "string"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "client_phone": {
+      "type": "string"
+    },
+    "client_email": {
+      "type": "string"
+    },
+    "client_id": {
+      "type": "string"
+    },
+    "service_id": {
+      "type": "string"
+    },
+    "service_name": {
+      "type": "string"
+    },
+    "service_category": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "clicked",
+        "lead_created",
+        "contacted",
+        "appointment_booked",
+        "appointment_completed",
+        "treatment_completed",
+        "satisfaction_confirmed",
+        "commission_pending",
+        "commission_approved",
+        "commission_payable",
+        "paid",
+        "cancelled",
+        "no_show",
+        "rejected",
+        "refunded",
+        "disputed"
+      ],
+      "default": "lead_created"
+    },
+    "gross_amount": {
+      "type": "number"
+    },
+    "eligible_amount": {
+      "type": "number"
+    },
+    "commission_id": {
+      "type": "string"
+    },
+    "fraud_flag": {
+      "type": "boolean",
+      "default": false
+    },
+    "fraud_reason": {
+      "type": "string"
+    },
+    "fraud_score": {
+      "type": "number",
+      "default": 0
+    },
+    "click_id": {
+      "type": "string"
+    },
+    "ip_address": {
+      "type": "string"
+    },
+    "utm_source": {
+      "type": "string"
+    },
+    "utm_medium": {
+      "type": "string"
+    },
+    "utm_campaign": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "appointment_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "partner_id",
+    "partner_user_id",
+    "client_name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.partner_user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

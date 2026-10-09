@@ -1,0 +1,112 @@
+{
+  "name": "Commission",
+  "type": "object",
+  "properties": {
+    "commission_id": {
+      "type": "string"
+    },
+    "referral_id": {
+      "type": "string"
+    },
+    "partner_id": {
+      "type": "string"
+    },
+    "partner_user_id": {
+      "type": "string"
+    },
+    "partner_name": {
+      "type": "string"
+    },
+    "service_id": {
+      "type": "string"
+    },
+    "service_name": {
+      "type": "string"
+    },
+    "basis": {
+      "type": "string",
+      "enum": [
+        "gross",
+        "profit"
+      ],
+      "default": "gross"
+    },
+    "gross_amount": {
+      "type": "number"
+    },
+    "eligible_amount": {
+      "type": "number"
+    },
+    "commission_rate": {
+      "type": "number"
+    },
+    "commission_amount": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "payable",
+        "paid",
+        "rejected",
+        "held",
+        "disputed"
+      ],
+      "default": "pending"
+    },
+    "approved_by": {
+      "type": "string"
+    },
+    "approved_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "paid_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payout_id": {
+      "type": "string"
+    },
+    "adjustment_notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "referral_id",
+    "partner_id",
+    "partner_user_id",
+    "commission_amount"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.partner_user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

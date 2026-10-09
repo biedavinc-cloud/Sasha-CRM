@@ -1,0 +1,83 @@
+{
+  "name": "ClinicSetting",
+  "type": "object",
+  "properties": {
+    "setting_key": {
+      "type": "string",
+      "default": "default"
+    },
+    "clinic_name": {
+      "type": "string",
+      "default": "Sasha Aesthetic Clinic"
+    },
+    "clinic_phone": {
+      "type": "string"
+    },
+    "clinic_email": {
+      "type": "string"
+    },
+    "clinic_address": {
+      "type": "string"
+    },
+    "referral_base_url": {
+      "type": "string",
+      "default": "https://sasha.ae/r/"
+    },
+    "default_attribution_window_days": {
+      "type": "number",
+      "default": 30
+    },
+    "default_commission_percentage": {
+      "type": "number",
+      "default": 10
+    },
+    "default_commission_basis": {
+      "type": "string",
+      "enum": [
+        "gross",
+        "profit"
+      ],
+      "default": "gross"
+    },
+    "notify_email_on_commission_approval": {
+      "type": "boolean",
+      "default": true
+    },
+    "notify_email_on_payout": {
+      "type": "boolean",
+      "default": true
+    },
+    "notify_whatsapp_on_payout": {
+      "type": "boolean",
+      "default": false
+    },
+    "whatsapp_template": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "setting_key"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

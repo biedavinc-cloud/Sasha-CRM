@@ -1,0 +1,62 @@
+{
+  "name": "ReferralClick",
+  "type": "object",
+  "properties": {
+    "click_id": {
+      "type": "string"
+    },
+    "partner_id": {
+      "type": "string"
+    },
+    "referral_code": {
+      "type": "string"
+    },
+    "ip_address": {
+      "type": "string"
+    },
+    "user_agent": {
+      "type": "string"
+    },
+    "referrer_source": {
+      "type": "string"
+    },
+    "utm_source": {
+      "type": "string"
+    },
+    "utm_medium": {
+      "type": "string"
+    },
+    "utm_campaign": {
+      "type": "string"
+    },
+    "converted": {
+      "type": "boolean",
+      "default": false
+    },
+    "referral_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "partner_id",
+    "referral_code"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {},
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

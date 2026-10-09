@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 30% 99%;
+    --foreground: 24 10% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 24 10% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 24 10% 12%;
+    --primary: 21 15% 53%;
+    --primary-foreground: 40 30% 98%;
+    --secondary: 17 20% 76%;
+    --secondary-foreground: 21 15% 25%;
+    --muted: 30 14% 96%;
+    --muted-foreground: 24 6% 45%;
+    --accent: 17 24% 92%;
+    --accent-foreground: 21 15% 25%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 30 12% 90%;
+    --input: 30 12% 90%;
+    --ring: 21 15% 53%;
+    --brand: 21 15% 53%;
+    --brand-soft: 17 20% 76%;
+    --brand-dark: 22 18% 38%;
+    --chart-1: 21 15% 53%;
+    --chart-2: 17 20% 76%;
+    --chart-3: 200 20% 60%;
+    --chart-4: 43 30% 66%;
+    --chart-5: 340 20% 70%;
+    --radius: 0.75rem;
+    --font-heading: "Poppins", ui-sans-serif, system-ui, sans-serif;
+    --font-body: "Poppins", ui-sans-serif, system-ui, sans-serif;
+    --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 24 10% 20%;
+    --sidebar-primary: 21 15% 53%;
+    --sidebar-primary-foreground: 40 30% 98%;
+    --sidebar-accent: 17 24% 94%;
+    --sidebar-accent-foreground: 21 15% 25%;
+    --sidebar-border: 30 12% 90%;
+    --sidebar-ring: 21 15% 53%;
+  }
+
+  .dark {
+    --background: 24 10% 8%;
+    --foreground: 40 30% 96%;
+    --card: 24 10% 11%;
+    --card-foreground: 40 30% 96%;
+    --popover: 24 10% 11%;
+    --popover-foreground: 40 30% 96%;
+    --primary: 17 20% 76%;
+    --primary-foreground: 21 15% 20%;
+    --secondary: 24 8% 18%;
+    --secondary-foreground: 40 30% 96%;
+    --muted: 24 8% 16%;
+    --muted-foreground: 30 10% 65%;
+    --accent: 24 8% 20%;
+    --accent-foreground: 40 30% 96%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 24 8% 22%;
+    --input: 24 8% 22%;
+    --ring: 17 20% 76%;
+    --brand: 17 20% 76%;
+    --brand-soft: 21 15% 53%;
+    --brand-dark: 17 20% 76%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 9999px; }
+  .card-shadow { box-shadow: 0 1px 3px rgba(24, 10%, 12%, 0.04), 0 1px 2px rgba(24, 10%, 12%, 0.03); }
+  .card-shadow-lg { box-shadow: 0 4px 24px rgba(24, 10%, 12%, 0.06), 0 1px 3px rgba(24, 10%, 12%, 0.04); }
+}
