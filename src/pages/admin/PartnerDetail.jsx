@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Save, Copy, Check } from "lucide-react";
+import { ArrowLeft, Save, Copy, Check, Wallet, TrendingUp } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useRecord, useCollection, useAggregate } from "@/hooks/crm";
 import { PageHeader, StatusBadge, Card, Spinner, Th, Td, StatCard } from "@/components/crm/ui";
