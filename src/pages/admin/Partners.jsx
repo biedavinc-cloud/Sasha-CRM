@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Handshake, Search, MoreVertical } from "lucide-react";
+import { Plus, Handshake, Search } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useCollection } from "@/hooks/crm";
 import { PageHeader, StatusBadge, EmptyState, Card, Spinner, Th, Td } from "@/components/crm/ui";

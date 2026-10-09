@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Handshake, Share2, TrendingUp, Wallet, ArrowUpRight, Percent } from "lucide-react";
 import { useCount, useCollection, useAggregate } from "@/hooks/crm";
 import { StatCard, PageHeader, Card, Spinner, Th, Td, StatusBadge } from "@/components/crm/ui";
-import { formatAED, formatDate, REFERRAL_STATUSES, COMMISSION_STATUSES } from "@/lib/format";
+import { formatAED, formatDate, REFERRAL_STATUSES } from "@/lib/format";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 export default function Dashboard() {

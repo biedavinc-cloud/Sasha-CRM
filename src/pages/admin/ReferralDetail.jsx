@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Flag, Calculator, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useRecord, useCollection } from "@/hooks/crm";
-import { PageHeader, StatusBadge, Card, Spinner, Th, Td } from "@/components/crm/ui";
+import { PageHeader, StatusBadge, Card, Spinner } from "@/components/crm/ui";
 import { REFERRAL_STATUSES, formatAED, formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

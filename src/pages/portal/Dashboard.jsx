@@ -3,7 +3,7 @@ import { useOutletContext, Link } from "react-router-dom";
 import { Share2, Wallet, TrendingUp, Copy, Check, ArrowUpRight } from "lucide-react";
 import { useCount, useCollection, useAggregate } from "@/hooks/crm";
 import { StatCard, PageHeader, Card, Spinner, StatusBadge, Th, Td } from "@/components/crm/ui";
-import { formatAED, formatDate, REFERRAL_STATUSES, COMMISSION_STATUSES } from "@/lib/format";
+import { formatAED, formatDate, REFERRAL_STATUSES } from "@/lib/format";
 
 export default function PartnerDashboard() {
   const { partner } = useOutletContext();

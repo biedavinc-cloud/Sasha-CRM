@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import { FileBarChart, Download, Users, Percent, Wallet, Share2, Sparkles, Calendar } from "lucide-react";
 import { useCollection, useAggregate } from "@/hooks/crm";
 import { PageHeader, Card, Spinner, Th, Td, StatusBadge, EmptyState } from "@/components/crm/ui";
 import { exportToCSV } from "@/lib/csv";
-import { formatAED, formatDate, COMMISSION_STATUSES, PAYOUT_STATUSES, REFERRAL_STATUSES, PARTNER_TYPES } from "@/lib/format";
+import { formatAED, formatDate, COMMISSION_STATUSES, PAYOUT_STATUSES, REFERRAL_STATUSES } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 

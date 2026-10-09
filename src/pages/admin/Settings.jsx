@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Settings as SettingsIcon, Building2, Share2, Bell, Save } from "lucide-react";
+import { Building2, Share2, Bell, Save } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { PageHeader, Card, Spinner } from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";

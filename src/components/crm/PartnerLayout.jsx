@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { Navigate, Outlet, useNavigate } from "react-router-dom";
+import React from "react";
+import { Navigate, Outlet } from "react-router-dom";
 import { LayoutDashboard, Share2, Percent, Wallet, Link as LinkIcon, User } from "lucide-react";
 import AppShell from "@/components/crm/AppShell";
 import { useAuth } from "@/lib/AuthContext";

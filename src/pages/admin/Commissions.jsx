@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import { Percent, Search, Calculator } from "lucide-react";
+import { Percent, Search } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useCollection } from "@/hooks/crm";
 import { PageHeader, StatusBadge, EmptyState, Card, Spinner, Th, Td } from "@/components/crm/ui";
-import { COMMISSION_STATUSES, formatAED, formatDate, formatDateTime } from "@/lib/format";
+import { COMMISSION_STATUSES, formatAED, formatDateTime } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Commissions() {

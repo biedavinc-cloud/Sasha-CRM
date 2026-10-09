@@ -3,7 +3,7 @@ import { Plus, Wallet, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useCollection } from "@/hooks/crm";
 import { PageHeader, StatusBadge, EmptyState, Card, Spinner, Th, Td } from "@/components/crm/ui";
-import { PAYOUT_STATUSES, formatAED, formatDate, formatDateTime } from "@/lib/format";
+import { PAYOUT_STATUSES, formatAED, formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
