@@ -1,9 +1,15 @@
+# Local development & D1 migrations only.
+#
+# Deliberately has NO `pages_build_output_dir`: Cloudflare Pages then ignores this file, so the project's
+# bindings (D1 as `DB`) and secrets are managed in the dashboard (Settings -> Bindings / Variables and Secrets)
+# and a placeholder database_id can never break a deployment.
+#
+# To run migrations from your machine against the real database, put your real D1 id below (don't commit it).
 name = "sasha-crm"
 compatibility_date = "2025-09-01"
-pages_build_output_dir = "./dist"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "sasha-crm"
-database_id = "00000000-0000-0000-0000-000000000000" # replace with the id printed by `wrangler d1 create sasha-crm`
+database_id = "00000000-0000-0000-0000-000000000000"
 migrations_dir = "migrations"

@@ -10,10 +10,9 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json",
     "preview": "vite preview",
-    "cf:dev": "wrangler pages dev dist --port 8788",
+    "cf:dev": "wrangler pages dev dist --port 8788 --d1 DB=00000000-0000-0000-0000-000000000000",
     "cf:migrate:local": "wrangler d1 migrations apply sasha-crm --local",
     "cf:migrate:remote": "wrangler d1 migrations apply sasha-crm --remote",
-    "cf:deploy": "npm run build && wrangler pages deploy dist --project-name sasha-crm",
     "test:api": "node scripts/smoke-test.mjs"
   },
   "dependencies": {

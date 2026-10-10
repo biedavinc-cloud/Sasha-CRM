@@ -53,7 +53,7 @@ Aucun secret dans le dépôt ni l'historique · cookies HttpOnly/SameSite · mot
 - Tests : 81 vérifications automatiques.
 
 Reste ouvert (volontairement, avec la raison) :
-- `database_id` D1 : à fournir par le propriétaire du compte Cloudflare.
+- Liaison D1 `DB` + secrets : à créer dans le dashboard Cloudflare (le dépôt ne dépend plus d'un `database_id` : `wrangler.toml` n'est plus lu par Pages).
 - `react-router` v7 et Tailwind v4 : montées de version majeures, impossibles à valider sans test navigateur ; risque actuel mitigé / limité au build.
 - Logo hébergé chez Base44 : à copier dans `public/` (le sandbox n'a pas accès à ce domaine).
 - PBKDF2 100 000 itérations (plafond Workers), sessions fixes 30 jours.

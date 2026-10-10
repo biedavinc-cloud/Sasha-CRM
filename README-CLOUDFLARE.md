@@ -25,21 +25,16 @@ Local secrets live in `.dev.vars` (git-ignored). Without `RESEND_API_KEY`, email
 Tests (server must be running): `WRANGLER_LOG=<file with the cf:dev output> npm run test:api`
 (use a fresh DB: stop the server, delete `.wrangler/state`, re-run `cf:migrate:local`).
 
-## First deploy
-```bash
-npx wrangler login
-npx wrangler d1 create sasha-crm                 # copy database_id into wrangler.toml
-npm run cf:migrate:remote      # applies migrations/0001 (tables) and 0002 (indexes)
-npx wrangler pages project create sasha-crm --production-branch main
-npx wrangler pages secret put AUTH_SECRET   --project-name sasha-crm   # openssl rand -base64 32
-npx wrangler pages secret put ADMIN_EMAILS  --project-name sasha-crm   # comma list; these emails become admin once verified
-npx wrangler pages secret put RESEND_API_KEY --project-name sasha-crm  # https://resend.com (verify your sending domain)
-npx wrangler pages secret put EMAIL_FROM    --project-name sasha-crm   # e.g. "Sasha Connect <no-reply@yourdomain.com>"
-npm run cf:deploy
-```
-Optional secrets: `ENABLE_GITHUB_PUSH=1` (leave unset: lets admin sessions write to the repo), `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` (redirect URI: `https://<your-domain>/api/auth/google/callback`; the button appears automatically), `GITHUB_TOKEN` (admin → GitHub page).
+## First deploy (Cloudflare dashboard)
+`wrangler.toml` is for local dev only (it has no `pages_build_output_dir`, so Pages ignores it): bindings and secrets live in the dashboard.
 
-Or connect the GitHub repo in the Cloudflare dashboard (build command `npm run build`, output `dist`) and add the secrets there.
+1. **D1**: Storage & Databases → D1 → Create `sasha-crm`. Open it → Console → run `migrations/0001_init.sql`, then `migrations/0002_indexes.sql`.
+2. **Pages project** (connected to this repo): build command `npm run build`, output directory `dist`.
+3. Project → Settings → **Bindings** → Add → D1 database → variable name **`DB`** → `sasha-crm` (Production and Preview).
+4. Project → Settings → **Variables and Secrets** (type: Secret): `AUTH_SECRET` (random, 32+ chars), `ADMIN_EMAILS` (comma list; these emails become admin once verified), `RESEND_API_KEY`, `EMAIL_FROM` (e.g. `Sasha Connect <no-reply@yourdomain.com>`).
+5. Deployments → Retry deployment. Until the `DB` binding exists, the API answers `503 Database is not configured`.
+
+Optional secrets: `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` (redirect URI `https://<your-domain>/api/auth/google/callback`; the button appears automatically), `GITHUB_TOKEN` and `ENABLE_GITHUB_PUSH=1` (admin → GitHub page; leave unset unless you need it — it lets an admin session write to the repo).
 
 ## Cutover checklist
 - Work on the `cloudflare-migration` branch. **Pushing to `main` syncs into the Base44 builder** while the GitHub integration is on.
