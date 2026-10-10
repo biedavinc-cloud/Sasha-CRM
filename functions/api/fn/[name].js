@@ -32,6 +32,11 @@ export async function onRequest({ request, env, params }) {
   const fn = Object.prototype.hasOwnProperty.call(FUNCTIONS, name) ? FUNCTIONS[name] : null;
   if (!fn) throw new HttpError(404, "Unknown function");
 
+  // Writing to the production repo from a web session is off by default (set ENABLE_GITHUB_PUSH=1 to allow it).
+  if (name === "pushToGitHub" && env.ENABLE_GITHUB_PUSH !== "1") {
+    throw new HttpError(403, "GitHub push is disabled on this deployment");
+  }
+
   const user = await getUser(env, request);
   if (fn.public) {
     await rateLimit(env, request, `fn-${name}`, { limit: fn.limit, windowSec: 600 });

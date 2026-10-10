@@ -54,7 +54,7 @@ export default async function(req: Request): Promise<Response> {
     }
 
     const commission = await base44.asServiceRole.entities.Commission.create({
-      commission_id: 'C-' + Date.now(),
+      commission_id: 'C-' + Date.now() + '-' + crypto.randomUUID().slice(0, 4),
       referral_id: referralId,
       partner_id: partner.id,
       partner_user_id: partner.user_id,

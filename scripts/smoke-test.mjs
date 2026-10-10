@@ -206,6 +206,22 @@ async function registerAndVerify(c, email, password) {
   ok(r.status === 409, "a PAID commission cannot be re-approved");
   r = await admin.post("/api/fn/createPayout", { partnerId: p1.id, commissionIds: [commissionId] });
   ok(r.status === 400, "a PAID commission cannot be paid twice");
+  {
+    // five admins click "pay" on the same commission at once -> exactly one payout
+    const rf = (await anon.post("/api/fn/captureReferral", { referralCode: `ONE${run}`, clientName: "Race", clientPhone: "+971507770001" })).data.referralId;
+    const cm = (await admin.post("/api/fn/processCommission", { referralId: rf, grossAmount: 500 })).data.commission.id;
+    await admin.post("/api/fn/approveCommission", { commissionId: cm, action: "approve" });
+    const res = await Promise.all([1, 2, 3, 4, 5].map(() => admin.post("/api/fn/createPayout", { partnerId: p1.id, commissionIds: [cm] })));
+    const wins = res.filter((x) => x.status === 200).length;
+    ok(wins === 1, "5 concurrent payouts of one commission -> exactly 1 succeeds", `got ${wins}`);
+    const pays = (await admin.get("/api/entities/Payout?q=" + encodeURIComponent(JSON.stringify({ partner_id: p1.id })))).data.items;
+    const withCm = pays.filter((x) => (x.commission_ids || []).includes(cm)).length;
+    ok(withCm === 1, "only one payout record references that commission", `got ${withCm}`);
+    const st = (await admin.get(`/api/entities/Commission/${cm}`)).data;
+    ok(st.status === "paid" && !st.claim_token && st.payout_id, "commission ends paid, linked to its payout, claim token cleared", JSON.stringify(st));
+  }
+  r = await admin.post("/api/fn/pushToGitHub", { message: "x", files: [{ path: "a", content: "b" }] });
+  ok(r.status === 403, "pushToGitHub is disabled by default");
 
   console.log("\n== Public endpoint hardening ==");
   r = await anon.post("/api/fn/trackClick", { referralCode: { $gt: "" } });
@@ -221,7 +237,7 @@ async function registerAndVerify(c, email, password) {
   r = await admin.post("/api/entities/Referral/aggregate", { groupBy: "partner_name", count: true, sum: "gross_amount", sort: "-count", limit: 5 });
   ok(r.status === 200 && r.data.rows[0].count >= 1, "aggregate with sort -count");
   r = await user.get("/api/entities/Commission");
-  ok(r.data.items.length === 1, "partner sees their commission");
+  ok(r.data.items.length >= 1 && r.data.items.every((c) => c.partner_user_id === me.id), "partner sees only their own commissions");
 
   console.log("\n== Password reset ==");
   r = await anon.post("/api/auth/password-reset/request", { email: `ghost-${run}@example.com` });

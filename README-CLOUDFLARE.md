@@ -29,7 +29,7 @@ Tests (server must be running): `WRANGLER_LOG=<file with the cf:dev output> npm 
 ```bash
 npx wrangler login
 npx wrangler d1 create sasha-crm                 # copy database_id into wrangler.toml
-npm run cf:migrate:remote
+npm run cf:migrate:remote      # applies migrations/0001 (tables) and 0002 (indexes)
 npx wrangler pages project create sasha-crm --production-branch main
 npx wrangler pages secret put AUTH_SECRET   --project-name sasha-crm   # openssl rand -base64 32
 npx wrangler pages secret put ADMIN_EMAILS  --project-name sasha-crm   # comma list; these emails become admin once verified
@@ -37,7 +37,7 @@ npx wrangler pages secret put RESEND_API_KEY --project-name sasha-crm  # https:/
 npx wrangler pages secret put EMAIL_FROM    --project-name sasha-crm   # e.g. "Sasha Connect <no-reply@yourdomain.com>"
 npm run cf:deploy
 ```
-Optional secrets: `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` (redirect URI: `https://<your-domain>/api/auth/google/callback`; the button appears automatically), `GITHUB_TOKEN` (admin → GitHub page).
+Optional secrets: `ENABLE_GITHUB_PUSH=1` (leave unset: lets admin sessions write to the repo), `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` (redirect URI: `https://<your-domain>/api/auth/google/callback`; the button appears automatically), `GITHUB_TOKEN` (admin → GitHub page).
 
 Or connect the GitHub repo in the Cloudflare dashboard (build command `npm run build`, output `dist`) and add the secrets there.
 

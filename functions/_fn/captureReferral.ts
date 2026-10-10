@@ -26,7 +26,7 @@ export default async function(req: Request): Promise<Response> {
     });
 
     const referral = await base44.asServiceRole.entities.Referral.create({
-      referral_id: 'R-' + Date.now(),
+      referral_id: 'R-' + Date.now() + '-' + crypto.randomUUID().slice(0, 4),
       partner_id: partner.id,
       partner_user_id: partner.user_id,
       partner_name: partner.business_name,

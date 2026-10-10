@@ -131,15 +131,15 @@ export async function applyBootstrapRole(env, user) {
 export async function rateLimit(env, request, action, { limit, windowSec, extra = "" }) {
   const key = `${action}:${extra || clientIp(request)}`;
   const now = nowSec();
-  const row = await env.DB.prepare("SELECT count, reset_at FROM rate_limits WHERE key = ?").bind(key).first();
-  if (!row || row.reset_at <= now) {
-    await env.DB.prepare(
-      "INSERT INTO rate_limits (key, count, reset_at) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET count = 1, reset_at = excluded.reset_at"
-    ).bind(key, now + windowSec).run();
-    return;
-  }
-  if (row.count >= limit) {
+  // One atomic statement: start a new window if the old one expired, otherwise increment.
+  const row = await env.DB.prepare(
+    `INSERT INTO rate_limits (key, count, reset_at) VALUES (?1, 1, ?2)
+     ON CONFLICT(key) DO UPDATE SET
+       count    = CASE WHEN reset_at <= ?3 THEN 1 ELSE count + 1 END,
+       reset_at = CASE WHEN reset_at <= ?3 THEN ?2 ELSE reset_at END
+     RETURNING count, reset_at`
+  ).bind(key, now + windowSec, now).first();
+  if (row.count > limit) {
     throw new HttpError(429, "Too many attempts. Please try again later.", { retryAfter: row.reset_at - now });
   }
-  await env.DB.prepare("UPDATE rate_limits SET count = count + 1 WHERE key = ?").bind(key).run();
 }

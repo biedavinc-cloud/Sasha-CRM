@@ -29,7 +29,7 @@ Limites : pas de test dans un vrai navigateur, ni Google OAuth, ni envoi d'email
 | 12 | `eligibleAmount` négatif → commission négative (−500 constaté). | Corrigé (400). |
 | 13 | Une commission **payée** pouvait être ré-approuvée → à nouveau payable → double paiement. | Corrigé (409). |
 | 14 | Paiement d'une commission d'un autre partenaire accepté. IDs en double. | Corrigé. |
-| 15 | `createPayout` n'est pas transactionnel : deux appels simultanés pourraient payer deux fois. Non reproduit en local (1 succès sur 3) mais le risque théorique demeure en production. | Ouvert — à traiter avec une réservation atomique (D1 batch/transaction). |
+| 15 | `createPayout` n'est pas transactionnel : deux appels simultanés pourraient payer deux fois. Non reproduit en local (1 succès sur 3) mais le risque théorique demeure en production. | Corrigé (round 2) : réservation atomique des commissions en une seule instruction SQL (5 paiements simultanés → 1 seul réussit, test automatisé). |
 
 ## Vérifié OK
 Aucun secret dans le dépôt ni l'historique · cookies HttpOnly/SameSite · mots de passe PBKDF2 salés · OTP à usage unique, 5 essais · pas d'énumération de comptes · reset = déconnexion de tous les appareils · RLS testé (partenaire = ses données) · approbation appliquée côté serveur · CSRF (origine + JSON) · limites de tentatives · IP réelle via `cf-connecting-ip`.
@@ -43,3 +43,17 @@ Aucun secret dans le dépôt ni l'historique · cookies HttpOnly/SameSite · mot
 - Logo toujours hébergé chez Base44 (à copier dans `public/`).
 - Identifiants `R-<timestamp>` / `C-<timestamp>` : collision possible dans la même milliseconde.
 - Token GitHub collé en clair dans une conversation : à révoquer.
+
+## Mise à jour — 2ᵉ série de correctifs
+- Paiements : réservation atomique `payable → paid` avant création du paiement, annulation automatique si le paiement échoue.
+- Limiteur de débit : une seule instruction atomique (plus de fenêtre de course).
+- Identifiants `R-` / `C-` / `P-` / `CLK-` : suffixe aléatoire, plus de collision dans la même milliseconde.
+- `pushToGitHub` : désactivée par défaut (active seulement avec `ENABLE_GITHUB_PUSH=1`).
+- Performance : chemins JSON littéraux + index (`migrations/0002_indexes.sql`) ; plans de requête vérifiés (recherche par index).
+- Tests : 81 vérifications automatiques.
+
+Reste ouvert (volontairement, avec la raison) :
+- `database_id` D1 : à fournir par le propriétaire du compte Cloudflare.
+- `react-router` v7 et Tailwind v4 : montées de version majeures, impossibles à valider sans test navigateur ; risque actuel mitigé / limité au build.
+- Logo hébergé chez Base44 : à copier dans `public/` (le sandbox n'a pas accès à ce domaine).
+- PBKDF2 100 000 itérations (plafond Workers), sessions fixes 30 jours.

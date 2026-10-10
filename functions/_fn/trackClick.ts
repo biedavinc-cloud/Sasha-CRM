@@ -16,7 +16,7 @@ export default async function(req: Request): Promise<Response> {
     const userAgent = req.headers.get('user-agent') || null;
 
     const click = await base44.asServiceRole.entities.ReferralClick.create({
-      click_id: 'CLK-' + Date.now(),
+      click_id: 'CLK-' + Date.now() + '-' + crypto.randomUUID().slice(0, 4),
       partner_id: partner.id,
       referral_code: referralCode,
       ip_address: ip,

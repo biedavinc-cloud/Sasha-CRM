@@ -9,11 +9,11 @@ const MAX_LIMIT = 1000;
 export const entityNames = () => Object.keys(ENTITIES);
 export const hasEntity = (name) => Object.prototype.hasOwnProperty.call(ENTITIES, name);
 
-function field(name, params) {
+// Field names are validated against FIELD_RE ([A-Za-z0-9_] only), so inlining them as a literal JSON path is safe
+// and lets SQLite use the expression indexes from migrations/0002_indexes.sql.
+function field(name) {
   if (typeof name !== "string" || !FIELD_RE.test(name)) throw new HttpError(400, `Invalid field name: ${name}`);
-  if (META.has(name)) return name;
-  params.push("$." + name);
-  return "json_extract(data, ?)";
+  return META.has(name) ? name : `json_extract(data, '$.${name}')`;
 }
 
 function bind(v) {
@@ -215,6 +215,19 @@ export function entityStore(env, name, { actor } = {}) {
       });
       for (let i = 0; i < stmts.length; i += 50) await db.batch(stmts.slice(i, i + 50));
       return { updated: rows.length };
+    },
+    // Atomic compare-and-set over several rows in ONE statement (used to claim commissions for a payout).
+    // Returns how many rows matched `where` and were patched (JSON merge-patch; null removes a key).
+    async claimMany(ids, { where = {}, patch }) {
+      if (!Array.isArray(ids) || !ids.length || ids.length > 500) return 0;
+      const params = [JSON.stringify(patch), nowIso(), name, ...ids];
+      let sql = `UPDATE entities SET data = json_patch(data, ?), updated_date = ? WHERE entity = ? AND id IN (${ids.map(() => "?").join(",")})`;
+      for (const [k, v] of Object.entries(where)) {
+        sql += ` AND ${field(k)} = ?`;
+        params.push(bind(v));
+      }
+      const res = await db.prepare(sql).bind(...params).run();
+      return res.meta?.changes ?? 0;
     },
     async delete(id) {
       const res = await db.prepare("DELETE FROM entities WHERE entity = ? AND id = ?").bind(name, id).run();
