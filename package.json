@@ -1,5 +1,5 @@
 {
-  "name": "base44-app",
+  "name": "sasha-crm",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,11 +9,14 @@
     "lint": "eslint . --quiet",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "cf:dev": "wrangler pages dev dist --port 8788",
+    "cf:migrate:local": "wrangler d1 migrations apply sasha-crm --local",
+    "cf:migrate:remote": "wrangler d1 migrations apply sasha-crm --remote",
+    "cf:deploy": "npm run build && wrangler pages deploy dist --project-name sasha-crm",
+    "test:api": "node scripts/smoke-test.mjs"
   },
   "dependencies": {
-    "@base44/sdk": "^0.8.53",
-    "@base44/vite-plugin": "^1.0.44",
     "@hello-pangea/dnd": "^17.0.0",
     "@hookform/resolvers": "^4.1.2",
     "@radix-ui/react-accordion": "^1.2.3",
@@ -92,10 +95,10 @@
     "eslint-plugin-react-refresh": "^0.4.18",
     "eslint-plugin-unused-imports": "^4.3.0",
     "globals": "^15.14.0",
-    "nitro": "^3.0.260610-beta",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.2",
-    "vite": "^8.2.0"
+    "vite": "^8.2.0",
+    "wrangler": "^4.0.0"
   }
 }

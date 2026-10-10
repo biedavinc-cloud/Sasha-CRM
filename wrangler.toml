@@ -1,0 +1,9 @@
+name = "sasha-crm"
+compatibility_date = "2025-09-01"
+pages_build_output_dir = "./dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sasha-crm"
+database_id = "00000000-0000-0000-0000-000000000000" # replace with the id printed by `wrangler d1 create sasha-crm`
+migrations_dir = "migrations"

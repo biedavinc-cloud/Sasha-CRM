@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,14 +16,14 @@ export default function PendingApproval({ existing, onSubmitted }) {
 
   const status = existing?.status;
 
-  const handleLogout = () => base44.auth.logout(window.location.origin + "/login");
+  const handleLogout = () => api.auth.logout(window.location.origin + "/login");
 
   const submit = async () => {
     setSubmitting(true);
     setError("");
     try {
-      const me = await base44.auth.me();
-      const created = await base44.entities.AccessRequest.create({
+      const me = await api.auth.me();
+      const created = await api.entities.AccessRequest.create({
         user_id: me.id,
         user_email: me.email,
         phone,

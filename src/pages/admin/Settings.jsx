@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Building2, Share2, Bell, Save } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { PageHeader, Card, Spinner } from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,13 +34,13 @@ export default function Settings() {
   const load = async () => {
     setLoading(true);
     try {
-      const page = await base44.entities.ClinicSetting.filter({ setting_key: "default" }, { limit: 1 });
+      const page = await api.entities.ClinicSetting.filter({ setting_key: "default" }, { limit: 1 });
       const items = page.items || [];
       if (items.length > 0) {
         setSettings(items[0]);
         setRecordId(items[0].id);
       } else {
-        const created = await base44.entities.ClinicSetting.create(DEFAULTS);
+        const created = await api.entities.ClinicSetting.create(DEFAULTS);
         setSettings(created);
         setRecordId(created.id);
       }
@@ -57,7 +57,7 @@ export default function Settings() {
   const save = async () => {
     setSaving(true);
     try {
-      const updated = await base44.entities.ClinicSetting.update(recordId, settings);
+      const updated = await api.entities.ClinicSetting.update(recordId, settings);
       setSettings(updated);
     } catch (e) {
       alert(e.message);

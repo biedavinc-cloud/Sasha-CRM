@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { UserCog, UserPlus, Shield, Handshake, Clock } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { PageHeader, Card, Spinner, Th, Td, EmptyState } from "@/components/crm/ui";
 import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -25,8 +25,8 @@ export default function Users() {
     setLoading(true);
     try {
       const [u, r] = await Promise.all([
-        base44.entities.User.list(),
-        base44.entities.AccessRequest.filter({ status: "pending" }),
+        api.entities.User.list(),
+        api.entities.AccessRequest.filter({ status: "pending" }),
       ]);
       setUsers(Array.isArray(u) ? u : u.items || []);
       setRequests(Array.isArray(r) ? r : r.items || []);
@@ -45,7 +45,7 @@ export default function Users() {
     if (!email) return;
     setSaving(true);
     try {
-      await base44.users.inviteUser(email, role);
+      await api.users.inviteUser(email, role);
       setOpen(false);
       setEmail("");
       setRole("user");
@@ -62,9 +62,9 @@ export default function Users() {
     setActionLoading(key);
     try {
       if (req.user_id) {
-        await base44.entities.User.update(req.user_id, { role: assignedRole });
+        await api.entities.User.update(req.user_id, { role: assignedRole });
       }
-      await base44.entities.AccessRequest.update(req.id, {
+      await api.entities.AccessRequest.update(req.id, {
         status: "approved",
         reviewed_by: currentUser?.id,
         reviewed_date: new Date().toISOString(),
@@ -81,7 +81,7 @@ export default function Users() {
     const key = req.id + "-reject";
     setActionLoading(key);
     try {
-      await base44.entities.AccessRequest.update(req.id, {
+      await api.entities.AccessRequest.update(req.id, {
         status: "rejected",
         reviewed_by: currentUser?.id,
         reviewed_date: new Date().toISOString(),

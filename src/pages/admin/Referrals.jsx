@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Share2, Search, Flag } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { useCollection } from "@/hooks/crm";
 import { PageHeader, StatusBadge, EmptyState, Card, Spinner, Th, Td } from "@/components/crm/ui";
 import { REFERRAL_STATUSES, formatDate, formatAED } from "@/lib/format";
@@ -35,7 +35,7 @@ export default function Referrals() {
     try {
       const partner = partners.find((p) => p.id === form.partner_id);
       const svc = services.find((s) => s.id === form.service_id);
-      await base44.entities.Referral.create({
+      await api.entities.Referral.create({
         ...form,
         referral_id: "R-" + Date.now().toString().slice(-6),
         partner_name: partner?.business_name || "",

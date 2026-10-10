@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Flag, Calculator, Check } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { useRecord, useCollection } from "@/hooks/crm";
 import { PageHeader, StatusBadge, Card, Spinner } from "@/components/crm/ui";
 import { REFERRAL_STATUSES, formatAED, formatDate } from "@/lib/format";
@@ -30,14 +30,14 @@ export default function ReferralDetail() {
   const processCommission = async () => {
     setProcessing(true);
     try {
-      const res = await base44.functions.invoke("processCommission", { referralId: id, grossAmount: Number(gross) || undefined, eligibleAmount: Number(eligible) || undefined });
+      const res = await api.functions.invoke("processCommission", { referralId: id, grossAmount: Number(gross) || undefined, eligibleAmount: Number(eligible) || undefined });
       setRecord({ ...referral, status: "commission_pending", gross_amount: res.data?.commission?.gross_amount ?? referral.gross_amount, commission_id: res.data?.commission?.id });
       setDone(true);
       setTimeout(() => setDone(false), 2500);
     } catch (e) { alert(e.response?.data?.error || e.message); } finally { setProcessing(false); }
   };
 
-  const advanceStatus = async (status) => { const updated = await base44.entities.Referral.update(id, { status }); setRecord(updated); };
+  const advanceStatus = async (status) => { const updated = await api.entities.Referral.update(id, { status }); setRecord(updated); };
 
   return (
     <div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 
 export function useCollection(entityName, query, options) {
   const [items, setItems] = useState([]);
@@ -12,7 +12,7 @@ export function useCollection(entityName, query, options) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await base44.entities[entityName].filter(query || {}, options || { limit: 100 });
+      const res = await api.entities[entityName].filter(query || {}, options || { limit: 100 });
       setItems(res.items || []);
       setError(null);
     } catch (e) {
@@ -32,7 +32,7 @@ export function useCount(entityName, query) {
   const [count, setCount] = useState(null);
   const qKey = JSON.stringify(query || {});
   useEffect(() => {
-    base44.entities[entityName].count(query || {})
+    api.entities[entityName].count(query || {})
       .then((c) => setCount(c))
       .catch(() => setCount(0));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -44,7 +44,7 @@ export function useAggregate(entityName, opts) {
   const [rows, setRows] = useState([]);
   const oKey = JSON.stringify(opts || {});
   useEffect(() => {
-    base44.entities[entityName].aggregate(opts)
+    api.entities[entityName].aggregate(opts)
       .then((r) => setRows(r.rows || []))
       .catch(() => setRows([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -58,7 +58,7 @@ export function useRecord(entityName, id) {
   useEffect(() => {
     if (!id) { setLoading(false); return; }
     setLoading(true);
-    base44.entities[entityName].get(id)
+    api.entities[entityName].get(id)
       .then((r) => setRecord(r))
       .catch(() => setRecord(null))
       .finally(() => setLoading(false));

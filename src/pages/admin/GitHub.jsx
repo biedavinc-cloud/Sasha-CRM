@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Github, ExternalLink, Upload, Plus, Trash2, MessageSquare, AlertCircle } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { PageHeader, Card, Spinner, Th, Td } from "@/components/crm/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,7 @@ export default function GitHubPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await base44.functions.invoke("getGitHubIssues", { owner, repo });
+      const res = await api.functions.invoke("getGitHubIssues", { owner, repo });
       setIssues(res.data.issues || []);
     } catch (err) {
       setError(err.response?.data?.error || err.message || "Failed to fetch issues");
@@ -52,7 +52,7 @@ export default function GitHubPage() {
     setPushing(true);
     setPushResult(null);
     try {
-      const res = await base44.functions.invoke("pushToGitHub", {
+      const res = await api.functions.invoke("pushToGitHub", {
         owner, repo, branch: "main",
         message: commitMessage,
         files: validFiles,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { Image } from "@/components/ui/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import {
 import { CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 
 const LOGO_URL =
-  "https://media.base44.com/images/public/6ac79288ee14219d24c0ade5/ed87ef57a_SashaAestheticsLogo-4.png";
+  "https://media.api.com/images/public/6ac79288ee14219d24c0ade5/ed87ef57a_SashaAestheticsLogo-4.png";
 const BG_IMAGE =
   "https://images.unsplash.com/photo-1631730486572-226e5cabe731?w=1200&q=80";
 
@@ -43,7 +43,7 @@ export default function ReferralLanding() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await base44.functions.invoke("trackClick", {
+        const res = await api.functions.invoke("trackClick", {
           referralCode: code,
           utmSource: searchParams.get("utm_source"),
           utmMedium: searchParams.get("utm_medium"),
@@ -65,7 +65,7 @@ export default function ReferralLanding() {
     e.preventDefault();
     setStage("submitting");
     try {
-      await base44.functions.invoke("captureReferral", {
+      await api.functions.invoke("captureReferral", {
         referralCode: code,
         clientName: form.name,
         clientPhone: form.phone,

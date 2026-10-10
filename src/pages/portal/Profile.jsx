@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Save, Check } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { PageHeader, Card } from "@/components/crm/ui";
 import { PARTNER_TYPES } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ export default function Profile() {
   const save = async () => {
     setSaving(true);
     try {
-      const res = await base44.functions.invoke('updatePartnerProfile', form);
+      const res = await api.functions.invoke('updatePartnerProfile', form);
       if (res.data?.error) throw new Error(res.data.error);
       setSaved(true); setTimeout(() => setSaved(false), 2500);
     } catch (e) { alert(e.message); } finally { setSaving(false); }

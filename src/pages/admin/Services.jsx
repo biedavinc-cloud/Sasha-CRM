@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Plus, Sparkles, Pencil } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { useCollection } from "@/hooks/crm";
 import { PageHeader, EmptyState, Card, Spinner, Th, Td } from "@/components/crm/ui";
 import { formatAED } from "@/lib/format";
@@ -31,8 +31,8 @@ export default function Services() {
     setSaving(true);
     try {
       const payload = { ...form, price: Number(form.price) || 0 };
-      if (editId) await base44.entities.Service.update(editId, payload);
-      else await base44.entities.Service.create(payload);
+      if (editId) await api.entities.Service.update(editId, payload);
+      else await api.entities.Service.create(payload);
       setOpen(false); reload();
     } catch (e) { alert(e.message); } finally { setSaving(false); }
   };

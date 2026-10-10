@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Percent, Search } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { useCollection } from "@/hooks/crm";
 import { PageHeader, StatusBadge, EmptyState, Card, Spinner, Th, Td } from "@/components/crm/ui";
 import { COMMISSION_STATUSES, formatAED, formatDateTime } from "@/lib/format";
@@ -27,7 +27,7 @@ export default function Commissions() {
   const doAction = async (action) => {
     setActing(true);
     try {
-      await base44.functions.invoke("approveCommission", { commissionId: review.id, action, notes });
+      await api.functions.invoke("approveCommission", { commissionId: review.id, action, notes });
       setReview(null); setNotes(""); reload();
     } catch (e) { alert(e.response?.data?.error || e.message); } finally { setActing(false); }
   };
@@ -36,7 +36,7 @@ export default function Commissions() {
     if (!confirm("Refund this commission? This will reverse the commission and mark the referral as refunded.")) return;
     setActing(true);
     try {
-      await base44.functions.invoke("refundCommission", { commissionId: review.id, reason: notes });
+      await api.functions.invoke("refundCommission", { commissionId: review.id, reason: notes });
       setReview(null); setNotes(""); reload();
     } catch (e) { alert(e.response?.data?.error || e.message); } finally { setActing(false); }
   };

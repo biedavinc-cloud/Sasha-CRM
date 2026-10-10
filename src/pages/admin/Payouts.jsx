@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Wallet, Check } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { useCollection } from "@/hooks/crm";
 import { PageHeader, StatusBadge, EmptyState, Card, Spinner, Th, Td } from "@/components/crm/ui";
 import { PAYOUT_STATUSES, formatAED, formatDate } from "@/lib/format";
@@ -25,7 +25,7 @@ export default function Payouts() {
 
   useEffect(() => {
     if (!selectedPartner) { setPayable([]); return; }
-    base44.entities.Commission.filter({ partner_id: selectedPartner, status: "payable" }, { limit: 100 })
+    api.entities.Commission.filter({ partner_id: selectedPartner, status: "payable" }, { limit: 100 })
       .then((r) => { setPayable(r.items || []); setSelected([]); })
       .catch(() => setPayable([]));
   }, [selectedPartner]);
@@ -36,7 +36,7 @@ export default function Payouts() {
     if (!selectedPartner || !selected.length) return;
     setSaving(true);
     try {
-      await base44.functions.invoke("createPayout", { partnerId: selectedPartner, commissionIds: selected, notes });
+      await api.functions.invoke("createPayout", { partnerId: selectedPartner, commissionIds: selected, notes });
       setCreateOpen(false); setSelectedPartner(""); setSelected([]); setNotes(""); reload();
     } catch (e) { alert(e.response?.data?.error || e.message); } finally { setSaving(false); }
   };
@@ -44,7 +44,7 @@ export default function Payouts() {
   const markPaid = async () => {
     setSaving(true);
     try {
-      await base44.entities.Payout.update(payOpen.id, { status: "paid", payment_reference: ref, payment_date: new Date().toISOString() });
+      await api.entities.Payout.update(payOpen.id, { status: "paid", payment_reference: ref, payment_date: new Date().toISOString() });
       setPayOpen(null); setRef(""); reload();
     } catch (e) { alert(e.message); } finally { setSaving(false); }
   };

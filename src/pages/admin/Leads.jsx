@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Plus, UserPlus, Search } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { useCollection } from "@/hooks/crm";
 import { PageHeader, StatusBadge, EmptyState, Card, Spinner, Th, Td } from "@/components/crm/ui";
 import { LEAD_STATUSES } from "@/lib/format";
@@ -29,12 +29,12 @@ export default function Leads() {
     setSaving(true);
     try {
       const partner = partners.find((p) => p.id === form.partner_id);
-      await base44.entities.Lead.create({ ...form, lead_id: "L-" + Date.now().toString().slice(-6), partner_name: partner?.business_name || "" });
+      await api.entities.Lead.create({ ...form, lead_id: "L-" + Date.now().toString().slice(-6), partner_name: partner?.business_name || "" });
       setOpen(false); setForm(empty); reload();
     } catch (e) { alert(e.message); } finally { setSaving(false); }
   };
 
-  const updateStatus = async (l, status) => { await base44.entities.Lead.update(l.id, { status }); reload(); };
+  const updateStatus = async (l, status) => { await api.entities.Lead.update(l.id, { status }); reload(); };
 
   return (
     <div>

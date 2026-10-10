@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { useAuth } from "@/lib/AuthContext";
 import PendingApproval from "@/components/PendingApproval";
 
@@ -15,7 +15,7 @@ export default function ApprovalGate({ children }) {
     }
     (async () => {
       try {
-        const reqs = await base44.entities.AccessRequest.filter({ user_id: user.id });
+        const reqs = await api.entities.AccessRequest.filter({ user_id: user.id });
         setRequest(reqs[0] || null);
       } catch (e) {
         setRequest(null);

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Save, Copy, Check, Wallet, TrendingUp } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { useRecord, useCollection, useAggregate } from "@/hooks/crm";
 import { PageHeader, StatusBadge, Card, Spinner, Th, Td, StatCard } from "@/components/crm/ui";
 import { formatAED, formatDate, PARTNER_STATUSES, PARTNER_TYPES, REFERRAL_STATUSES, COMMISSION_STATUSES, PAYOUT_STATUSES } from "@/lib/format";
@@ -43,7 +43,7 @@ export default function PartnerDetail() {
   const saveConfig = async () => {
     setSaving(true);
     try {
-      const updated = await base44.entities.Partner.update(id, { ...form, commission_percentage: Number(form.commission_percentage), min_transaction_amount: form.min_transaction_amount ? Number(form.min_transaction_amount) : null, max_commission: form.max_commission ? Number(form.max_commission) : null, attribution_window_days: Number(form.attribution_window_days) || 30 });
+      const updated = await api.entities.Partner.update(id, { ...form, commission_percentage: Number(form.commission_percentage), min_transaction_amount: form.min_transaction_amount ? Number(form.min_transaction_amount) : null, max_commission: form.max_commission ? Number(form.max_commission) : null, attribution_window_days: Number(form.attribution_window_days) || 30 });
       setRecord(updated);
       setEditing(false);
     } catch (e) { alert(e.message); } finally { setSaving(false); }

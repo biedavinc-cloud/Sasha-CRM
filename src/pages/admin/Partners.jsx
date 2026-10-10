@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Handshake, Search } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { useCollection } from "@/hooks/crm";
 import { PageHeader, StatusBadge, EmptyState, Card, Spinner, Th, Td } from "@/components/crm/ui";
 import { PARTNER_STATUSES, PARTNER_TYPES, formatDate } from "@/lib/format";
@@ -31,10 +31,10 @@ export default function Partners() {
     try {
       let userId = "";
       if (form.email) {
-        try { const res = await base44.users.inviteUser(form.email, "user"); userId = res?.id || res?.data?.id || ""; } catch (e) { /* may already exist */ }
+        try { const res = await api.users.inviteUser(form.email, "user"); userId = res?.id || res?.data?.id || ""; } catch (e) { /* may already exist */ }
       }
       const code = "SASHA-" + form.business_name.toUpperCase().replace(/[^A-Z0-9]/g, "");
-      await base44.entities.Partner.create({
+      await api.entities.Partner.create({
         ...form,
         partner_id: "P-" + Date.now().toString().slice(-6),
         referral_code: code,
@@ -54,7 +54,7 @@ export default function Partners() {
   };
 
   const changeStatus = async (p, status) => {
-    await base44.entities.Partner.update(p.id, { status });
+    await api.entities.Partner.update(p.id, { status });
     reload();
   };
 

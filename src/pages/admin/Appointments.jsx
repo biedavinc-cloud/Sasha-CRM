@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Plus, Calendar as CalIcon } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { useCollection } from "@/hooks/crm";
 import { PageHeader, StatusBadge, EmptyState, Card, Spinner, Th, Td } from "@/components/crm/ui";
 import { APPOINTMENT_STATUSES, formatDate } from "@/lib/format";
@@ -28,12 +28,12 @@ export default function Appointments() {
     try {
       const svc = services.find((s) => s.id === form.service_id);
       const partner = partners.find((p) => p.id === form.partner_id);
-      await base44.entities.Appointment.create({ ...form, appointment_id: "A-" + Date.now().toString().slice(-6), service_name: svc?.name || "", partner_name: partner?.business_name || "" });
+      await api.entities.Appointment.create({ ...form, appointment_id: "A-" + Date.now().toString().slice(-6), service_name: svc?.name || "", partner_name: partner?.business_name || "" });
       setOpen(false); setForm(empty); reload();
     } catch (e) { alert(e.message); } finally { setSaving(false); }
   };
 
-  const updateStatus = async (a, status) => { await base44.entities.Appointment.update(a.id, { status }); reload(); };
+  const updateStatus = async (a, status) => { await api.entities.Appointment.update(a.id, { status }); reload(); };
 
   return (
     <div>
