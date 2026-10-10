@@ -27,8 +27,18 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ error: 'Service not eligible for partner commission' }, { status: 400 });
     }
 
-    const gross = grossAmount ?? referral.gross_amount ?? 0;
-    const eligible = eligibleAmount ?? referral.eligible_amount ?? gross;
+    const num = (v: any) => (v === undefined || v === null || v === '' ? undefined : Number(v));
+    const gross = num(grossAmount) ?? referral.gross_amount ?? 0;
+    const eligible = num(eligibleAmount) ?? referral.eligible_amount ?? gross;
+    if (!Number.isFinite(gross) || gross < 0 || !Number.isFinite(eligible) || eligible < 0) {
+      return Response.json({ error: 'Amounts must be non-negative numbers' }, { status: 400 });
+    }
+
+    // One live commission per referral (a rejected one may be recalculated)
+    const existing = await base44.asServiceRole.entities.Commission.filter({ referral_id: referralId });
+    if (existing.some((c: any) => c.status !== 'rejected')) {
+      return Response.json({ error: 'A commission already exists for this referral' }, { status: 409 });
+    }
 
     const calc = calculateCommissionAmount({
       basis: partner.commission_basis || 'gross',

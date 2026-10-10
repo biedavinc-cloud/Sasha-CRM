@@ -9,8 +9,9 @@ export default async function(req: Request): Promise<Response> {
     if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const body = await req.json();
-    const { partnerId, commissionIds, notes } = body;
-    if (!partnerId || !commissionIds?.length) return Response.json({ error: 'partnerId and commissionIds required' }, { status: 400 });
+    const { partnerId, notes } = body;
+    const commissionIds: string[] = Array.isArray(body.commissionIds) ? [...new Set<string>(body.commissionIds.filter((x: any) => typeof x === 'string'))] : [];
+    if (!partnerId || !commissionIds.length) return Response.json({ error: 'partnerId and commissionIds required' }, { status: 400 });
 
     const partner = await base44.asServiceRole.entities.Partner.get(partnerId);
     if (!partner) return Response.json({ error: 'Partner not found' }, { status: 404 });
@@ -19,6 +20,9 @@ export default async function(req: Request): Promise<Response> {
     const payable = commissions.filter((c: any) => c.status === 'payable');
     if (payable.length !== commissionIds.length) {
       return Response.json({ error: 'Some commissions are not payable' }, { status: 400 });
+    }
+    if (payable.some((c: any) => c.partner_id !== partnerId)) {
+      return Response.json({ error: 'Commissions belong to a different partner' }, { status: 400 });
     }
 
     const amount = payable.reduce((sum: number, c: any) => sum + (c.commission_amount || 0), 0);

@@ -15,6 +15,10 @@ export default async function(req: Request): Promise<Response> {
     const commission = await base44.asServiceRole.entities.Commission.get(commissionId);
     if (!commission) return Response.json({ error: 'Commission not found' }, { status: 404 });
 
+    if (commission.status === 'paid') {
+      return Response.json({ error: 'Commission is already paid — use the refund flow instead' }, { status: 409 });
+    }
+
     const previous = { status: commission.status };
     let newStatus: string;
     let referralStatus: string | null = null;

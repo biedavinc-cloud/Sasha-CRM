@@ -60,8 +60,6 @@ export default async function(req: Request): Promise<Response> {
     return Response.json({
       ok: true,
       referralId: referral.id,
-      fraudFlag: fraud.fraudFlag,
-      fraudScore: fraud.fraudScore,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

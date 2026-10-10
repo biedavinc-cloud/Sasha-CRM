@@ -10,7 +10,10 @@ export default async function(req) {
     const body = await req.json().catch(() => ({}));
     const owner = body.owner || 'biedavinc-cloud';
     const repo = body.repo || 'Sasha-CRM';
-    const state = body.state || 'open';
+
+    const SAFE = /^(?!\.+$)[A-Za-z0-9_.-]{1,100}$/;
+    if (!SAFE.test(String(owner)) || !SAFE.test(String(repo))) return Response.json({ error: 'Invalid owner or repo' }, { status: 400 });
+    const state = ['open', 'closed', 'all'].includes(body.state) ? body.state : 'open';
     const perPage = Math.min(body.perPage || 100, 100);
 
     const { accessToken } = await base44.asServiceRole.connectors.getConnection('github');

@@ -203,7 +203,7 @@ const routes = {
         "INSERT INTO users (id, email, full_name, role, email_verified, google_sub, created_date, updated_date) VALUES (?, ?, ?, 'user', 1, ?, ?, ?)"
       ).bind(user.id, email, user.full_name, claims.sub, now, now).run();
     } else {
-      await env.DB.prepare("UPDATE users SET google_sub = COALESCE(google_sub, ?), email_verified = 1, updated_date = ? WHERE id = ?").bind(claims.sub, now, user.id).run();
+      await env.DB.prepare("UPDATE users SET google_sub = COALESCE(google_sub, ?), password_hash = CASE WHEN email_verified = 0 THEN NULL ELSE password_hash END, email_verified = 1, updated_date = ? WHERE id = ?").bind(claims.sub, now, user.id).run();
     }
     const u = await applyBootstrapRole(env, publicUser(user));
     const session = await createSession(env, request, u.id);

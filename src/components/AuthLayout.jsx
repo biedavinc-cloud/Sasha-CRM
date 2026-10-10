@@ -2,7 +2,7 @@ import React from "react";
 import { Image } from "@/components/ui/image";
 
 const LOGO_URL =
-  "https://media.api.com/images/public/6ac79288ee14219d24c0ade5/ed87ef57a_SashaAestheticsLogo-4.png";
+  "https://media.base44.com/images/public/6ac79288ee14219d24c0ade5/ed87ef57a_SashaAestheticsLogo-4.png";
 const BG_IMAGE =
   "https://images.unsplash.com/photo-1631730486572-226e5cabe731?w=1200&q=80";
 

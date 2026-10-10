@@ -11,6 +11,10 @@ export default async function(req) {
     const owner = body.owner || 'biedavinc-cloud';
     const repo = body.repo || 'Sasha-CRM';
     const branch = body.branch || 'main';
+
+    const SAFE = /^(?!\.+$)[A-Za-z0-9_.-]{1,100}$/;
+    if (!SAFE.test(String(owner)) || !SAFE.test(String(repo))) return Response.json({ error: 'Invalid owner or repo' }, { status: 400 });
+    if (!/^[A-Za-z0-9_./-]{1,100}$/.test(String(branch)) || String(branch).includes('..')) return Response.json({ error: 'Invalid branch' }, { status: 400 });
     const message = body.message;
     const files = body.files;
 

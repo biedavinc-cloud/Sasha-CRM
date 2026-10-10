@@ -189,6 +189,33 @@ async function registerAndVerify(c, email, password) {
   ok(r.status === 200 && r.data.partner.phone === "+971509999999" && r.data.partner.commission_percentage === 10, "updatePartnerProfile only touches allowed fields", JSON.stringify(r.data));
   r = await admin.post("/api/fn/processCommission", { referralId: refId, grossAmount: 1000 });
   ok(r.status === 200, "processCommission (admin)", JSON.stringify(r.data));
+  const commissionId = r.data?.commission?.id;
+  r = await admin.post("/api/fn/processCommission", { referralId: refId, grossAmount: 1000 });
+  ok(r.status === 409, "second commission for the same referral is refused");
+  r = await admin.post("/api/fn/processCommission", { referralId: refId, grossAmount: -5 });
+  ok(r.status === 400 || r.status === 409, "negative amount is refused");
+
+  console.log("\n== Money rules ==");
+  r = await admin.post("/api/fn/approveCommission", { commissionId, action: "approve" });
+  ok(r.status === 200 && r.data.status === "payable", "approve -> payable");
+  r = await admin.post("/api/fn/createPayout", { partnerId: p2.id, commissionIds: [commissionId] });
+  ok(r.status === 400, "payout refused when the commission belongs to another partner", JSON.stringify(r.data));
+  r = await admin.post("/api/fn/createPayout", { partnerId: p1.id, commissionIds: [commissionId, commissionId] });
+  ok(r.status === 200, "duplicate ids in a payout are de-duplicated", JSON.stringify(r.data));
+  r = await admin.post("/api/fn/approveCommission", { commissionId, action: "approve" });
+  ok(r.status === 409, "a PAID commission cannot be re-approved");
+  r = await admin.post("/api/fn/createPayout", { partnerId: p1.id, commissionIds: [commissionId] });
+  ok(r.status === 400, "a PAID commission cannot be paid twice");
+
+  console.log("\n== Public endpoint hardening ==");
+  r = await anon.post("/api/fn/trackClick", { referralCode: { $gt: "" } });
+  ok(r.status === 400, "operator injection in referralCode rejected", JSON.stringify(r.data));
+  r = await anon.post("/api/fn/captureReferral", { referralCode: `ONE${run}`, clientName: "x".repeat(20000) });
+  ok(r.status === 413 || r.status === 400, "oversized public payload rejected");
+  r = await anon.post("/api/fn/captureReferral", { referralCode: `ONE${run}`, clientName: "Client B", clientPhone: "+971502223344" });
+  ok(r.status === 200 && !("fraudScore" in r.data) && !("fraudFlag" in r.data), "fraud score is not exposed to the public", JSON.stringify(r.data));
+  r = await admin.post("/api/fn/getGitHubIssues", { owner: "../../user", repo: "x" });
+  ok(r.status === 400, "GitHub helper rejects path-traversal owner/repo");
   r = await admin.post("/api/entities/Commission/aggregate", { groupBy: "status", sum: "commission_amount" });
   ok(r.status === 200 && Array.isArray(r.data.rows) && r.data.rows.length >= 1 && typeof r.data.rows[0].sum_commission_amount === "number", "aggregate groupBy/sum", JSON.stringify(r.data));
   r = await admin.post("/api/entities/Referral/aggregate", { groupBy: "partner_name", count: true, sum: "gross_amount", sort: "-count", limit: 5 });

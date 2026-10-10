@@ -39,14 +39,35 @@ export async function onRequest({ request, env, params }) {
     throw new HttpError(401, "Authentication required");
   }
 
+  // Body limits; public endpoints additionally accept flat scalar values only. This blocks operator injection
+  // such as {"referralCode": {"$gt": ""}} which would otherwise reach the query engine.
+  const text = await request.text();
+  if (text.length > (fn.public ? 16384 : 262144)) throw new HttpError(413, "Payload too large");
+  if (fn.public) {
+    let v;
+    try { v = text ? JSON.parse(text) : {}; } catch { throw new HttpError(400, "Invalid JSON body"); }
+    if (v === null || typeof v !== "object" || Array.isArray(v)) throw new HttpError(400, "Invalid JSON body");
+    for (const [k, val] of Object.entries(v)) {
+      const t = typeof val;
+      if (val !== null && t !== "string" && t !== "number" && t !== "boolean") throw new HttpError(400, `Invalid value for ${k}`);
+      if (t === "string" && val.length > 500) throw new HttpError(400, `${k} is too long`);
+    }
+  }
+
   // Never trust a client-supplied X-Forwarded-For: on Cloudflare the real address is cf-connecting-ip.
   const headers = new Headers(request.headers);
   headers.set("x-forwarded-for", clientIp(request));
   headers.delete("x-real-ip");
-  const req = new Request(request, { headers });
+  headers.delete("content-length");
+  const req = new Request(request.url, { method: "POST", headers, body: text });
   bindContext(req, env, user);
 
   const res = await fn.handler(req);
+  if (res.status >= 500) {
+    // Never echo internal error text (SQL, stack, config) to the client
+    console.error(`fn ${name} failed:`, await res.clone().text());
+    return json({ error: "Internal server error" }, 500);
+  }
   const out = new Response(res.body, res);
   out.headers.set("cache-control", "no-store");
   return out;
