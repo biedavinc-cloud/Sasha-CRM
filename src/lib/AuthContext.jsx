@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       // 401 just means "not signed in" — anything else is a real failure (network, server)
       if (error.status !== 401) {
-        setAuthError({ type: 'unknown', message: error.message || 'Failed to load your session' });
+        setAuthError({ type: 'unknown', status: error.status, message: error.message || 'Failed to load your session' });
       } else {
         setAuthError(null);
       }

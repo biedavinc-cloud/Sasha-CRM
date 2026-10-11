@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
+import SetupNeeded from '@/components/SetupNeeded';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -64,12 +65,7 @@ const AuthenticatedApp = () => {
   }
 
   if (authError) {
-    return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
-        <p className="text-sm text-muted-foreground">{authError.message}</p>
-        <button className="text-sm font-medium text-primary hover:underline" onClick={checkUserAuth}>Try again</button>
-      </div>
-    );
+    return <SetupNeeded error={authError} onRetry={checkUserAuth} />;
   }
 
   return (
