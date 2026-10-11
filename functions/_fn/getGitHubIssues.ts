@@ -16,7 +16,12 @@ export default async function(req) {
     const state = ['open', 'closed', 'all'].includes(body.state) ? body.state : 'open';
     const perPage = Math.min(body.perPage || 100, 100);
 
-    const { accessToken } = await base44.asServiceRole.connectors.getConnection('github');
+    let accessToken: string;
+    try {
+      ({ accessToken } = await base44.asServiceRole.connectors.getConnection('github'));
+    } catch {
+      return Response.json({ error: 'GitHub is not configured on this deployment (set the GITHUB_TOKEN secret)' }, { status: 503 });
+    }
 
     const resp = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/issues?state=${state}&sort=created&direction=desc&per_page=${perPage}`,

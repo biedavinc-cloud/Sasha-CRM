@@ -3,7 +3,7 @@ import { json, errorResponse } from "../_lib/util.js";
 export async function onRequest(context) {
   const { request, env } = context;
   try {
-    if (!env.DB) {
+    if (!env.DB && !new URL(request.url).pathname.endsWith("/api/health")) {
       return json({ error: "Database is not configured: bind a D1 database as DB (Pages -> Settings -> Bindings)" }, 503);
     }
     // CSRF defence in depth (cookies are also SameSite=Lax): state-changing requests must be same-origin.

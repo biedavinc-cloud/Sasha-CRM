@@ -25,7 +25,12 @@ export default async function(req) {
       return Response.json({ error: 'Max 20 files per push' }, { status: 400 });
     }
 
-    const { accessToken } = await base44.asServiceRole.connectors.getConnection('github');
+    let accessToken: string;
+    try {
+      ({ accessToken } = await base44.asServiceRole.connectors.getConnection('github'));
+    } catch {
+      return Response.json({ error: 'GitHub is not configured on this deployment (set the GITHUB_TOKEN secret)' }, { status: 503 });
+    }
     const headers = {
       'Authorization': `Bearer ${accessToken}`,
       'Accept': 'application/vnd.github+json',

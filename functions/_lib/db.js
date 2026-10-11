@@ -16,6 +16,15 @@ function field(name) {
   return META.has(name) ? name : `json_extract(data, '$.${name}')`;
 }
 
+// D1 caps a statement at 100 bound parameters. Long IN lists are inlined as properly quoted literals instead.
+function lit(v) {
+  if (v === null) return "NULL";
+  if (typeof v === "boolean") return v ? "1" : "0";
+  if (typeof v === "number" && Number.isFinite(v)) return String(v);
+  if (typeof v === "string" && !v.includes("\u0000")) return `'${v.replace(/'/g, "''")}'`;
+  throw new HttpError(400, "Unsupported value in query");
+}
+
 function bind(v) {
   if (typeof v === "boolean") return v ? 1 : 0;
   if (v === null || typeof v === "string" || typeof v === "number") return v;
@@ -45,16 +54,11 @@ function compare(name, cond, params) {
       case "$nin": {
         if (!Array.isArray(val) || val.length > 500) throw new HttpError(400, `${op} expects an array`);
         if (!val.length) { out.push(op === "$in" ? "0" : "1"); break; }
-        const ph = val.map(() => "?").join(",");
-        if (op === "$in") {
-          const e = field(name, params);
-          val.forEach((x) => params.push(bind(x)));
-          out.push(`${e} IN (${ph})`);
-        } else {
-          const e1 = field(name, params), e2 = field(name, params);
-          val.forEach((x) => params.push(bind(x)));
-          out.push(`(${e1} IS NULL OR ${e2} NOT IN (${ph}))`);
-        }
+        const inline = val.length > 30;
+        const ph = inline ? val.map(lit).join(",") : val.map(() => "?").join(",");
+        const e1 = field(name, params), e2 = field(name, params);
+        if (!inline) val.forEach((x) => params.push(bind(x)));
+        out.push(op === "$in" ? `${e1} IN (${ph})` : `(${e1} IS NULL OR ${e2} NOT IN (${ph}))`);
         break;
       }
       case "$gt": case "$gte": case "$lt": case "$lte": {
@@ -220,8 +224,10 @@ export function entityStore(env, name, { actor } = {}) {
     // Returns how many rows matched `where` and were patched (JSON merge-patch; null removes a key).
     async claimMany(ids, { where = {}, patch }) {
       if (!Array.isArray(ids) || !ids.length || ids.length > 500) return 0;
-      const params = [JSON.stringify(patch), nowIso(), name, ...ids];
-      let sql = `UPDATE entities SET data = json_patch(data, ?), updated_date = ? WHERE entity = ? AND id IN (${ids.map(() => "?").join(",")})`;
+      if (!ids.every((i) => typeof i === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(i))) return 0;
+      const params = [JSON.stringify(patch), nowIso(), name];
+      // ids are validated above, so they can be inlined (a 500-id payout would exceed D1's 100-parameter limit)
+      let sql = `UPDATE entities SET data = json_patch(data, ?), updated_date = ? WHERE entity = ? AND id IN (${ids.map((i) => `'${i}'`).join(",")})`;
       for (const [k, v] of Object.entries(where)) {
         sql += ` AND ${field(k)} = ?`;
         params.push(bind(v));

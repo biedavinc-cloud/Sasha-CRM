@@ -59,7 +59,7 @@ export async function onRequest({ request, env, params }) {
           user_email: user.email,
           phone: str(body.phone, 40),
           note: str(body.note, 1000),
-          requested_role: "user",
+          requested_role: body.requested_role === "admin" ? "admin" : "user", // only a request: an admin assigns the real role
           status: "pending",
         };
       }

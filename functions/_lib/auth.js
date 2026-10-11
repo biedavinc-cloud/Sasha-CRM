@@ -1,6 +1,12 @@
 import { HttpError, b64url, fromB64url, enc, randomToken, sha256, timingSafeEqual, nowSec, nowIso, clientIp } from "./util.js";
 
 const PBKDF2_ITERATIONS = 100000; // Cloudflare Workers caps PBKDF2 at 100k iterations
+// Default is the maximum. On the Workers FREE plan (10 ms CPU per request) that can trip "Error 1102": either use the
+// Paid plan (recommended) or set PBKDF2_ITERATIONS (10000-100000). Existing hashes keep their own stored cost.
+export function iterations(env) {
+  const n = parseInt(env && env.PBKDF2_ITERATIONS, 10);
+  return Number.isFinite(n) ? Math.min(Math.max(n, 10000), PBKDF2_ITERATIONS) : PBKDF2_ITERATIONS;
+}
 const SESSION_TTL = 30 * 24 * 3600;
 const COOKIE = "sid";
 
@@ -15,10 +21,11 @@ export function assertPasswordPolicy(pw) {
   if (pw.length > 128) throw new HttpError(400, "Password is too long (max 128 characters)");
 }
 
-export async function hashPassword(password) {
+export async function hashPassword(password, env) {
+  const cost = iterations(env);
   const salt = crypto.getRandomValues(new Uint8Array(16));
-  const hash = await pbkdf2(password, salt, PBKDF2_ITERATIONS);
-  return `pbkdf2$${PBKDF2_ITERATIONS}$${b64url(salt)}$${b64url(hash)}`;
+  const hash = await pbkdf2(password, salt, cost);
+  return `pbkdf2$${cost}$${b64url(salt)}$${b64url(hash)}`;
 }
 
 export async function verifyPassword(password, stored) {
@@ -33,8 +40,8 @@ export async function verifyPassword(password, stored) {
 }
 
 // Burns roughly the same time as a real verification (used when the account doesn't exist).
-export async function fakeVerify(password) {
-  await pbkdf2(password, new Uint8Array(16), PBKDF2_ITERATIONS);
+export async function fakeVerify(password, env) {
+  await pbkdf2(password, new Uint8Array(16), iterations(env));
 }
 
 // ---------- secrets ----------

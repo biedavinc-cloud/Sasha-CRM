@@ -12,5 +12,16 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+      <script id="app-start-watchdog">
+      // If the app bundle never starts (wrong build output directory, blocked script, ...), say so instead of a blank page.
+      setTimeout(function () {
+        var r = document.getElementById('root');
+        if (r && !r.firstChild) {
+          r.innerHTML = '<div style="font-family:system-ui,sans-serif;max-width:460px;margin:15vh auto;padding:0 24px;text-align:center">' +
+            '<h1 style="font-size:20px">The app could not start</h1>' +
+            '<p style="color:#666;font-size:14px">Try a hard refresh (Ctrl+Shift+R). If you are the site owner: the deployed files are not the built app &mdash; check that the Cloudflare Pages build output directory is <code>dist</code>, then redeploy. Status: <a href="/api/health">/api/health</a></p></div>';
+        }
+      }, 6000);
+    </script>
   </body>
 </html>

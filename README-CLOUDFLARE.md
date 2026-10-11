@@ -9,7 +9,8 @@ functions/api/users/    admin: list / change role / invite
 functions/api/fn/       business logic (functions/_fn/*): commissions, payouts, referral capture, GitHub
 migrations/             D1 schema
 src/api/client.js       frontend client (replaces the Base44 SDK)
-scripts/smoke-test.mjs  66 end-to-end checks (auth, RLS, approval gate, rate limits…)
+scripts/smoke-test.mjs  87 API checks (auth, RLS, approval gate, money rules, rate limits…)
+tests/ui/               36 UI tests: the real <App/> in jsdom against the local server (auth screens, every admin/portal page, approve/invite/create-partner)
 ```
 
 ## Local development
@@ -20,10 +21,13 @@ npm run cf:migrate:local
 npm run cf:dev            # http://localhost:8788  (API + built frontend, local D1)
 # second terminal, for hot reload: npm run dev   (Vite proxies /api to :8788)
 ```
-Local secrets live in `.dev.vars` (git-ignored). Without `RESEND_API_KEY`, emails (OTP codes, reset links) are printed in the `cf:dev` console.
+Local secrets: copy `.dev.vars.example` to `.dev.vars` (git-ignored). With `DEV_EMAIL_LOG=1`, emails (OTP codes, reset links) are printed in the `cf:dev` console.
 
-Tests (server must be running): `WRANGLER_LOG=<file with the cf:dev output> npm run test:api`
-(use a fresh DB: stop the server, delete `.wrangler/state`, re-run `cf:migrate:local`).
+Tests (start `npm run cf:dev` on a fresh DB first: stop it, delete `.wrangler/state`, run `npm run cf:migrate:local`):
+```bash
+WRANGLER_LOG=<file with the cf:dev output> npm run test:api   # API checks
+WRANGLER_LOG=<file with the cf:dev output> npm run test:ui    # UI tests
+```
 
 ## First deploy (Cloudflare dashboard)
 `wrangler.toml` is for local dev only (it has no `pages_build_output_dir`, so Pages ignores it): bindings and secrets live in the dashboard.
@@ -33,6 +37,10 @@ Tests (server must be running): `WRANGLER_LOG=<file with the cf:dev output> npm 
 3. Project → Settings → **Bindings** → Add → D1 database → variable name **`DB`** → `sasha-crm` (Production and Preview).
 4. Project → Settings → **Variables and Secrets** (type: Secret): `AUTH_SECRET` (random, 32+ chars), `ADMIN_EMAILS` (comma list; these emails become admin once verified), `RESEND_API_KEY`, `EMAIL_FROM` (e.g. `Sasha Connect <no-reply@yourdomain.com>`).
 5. Deployments → Retry deployment. Until the `DB` binding exists, the API answers `503 Database is not configured`.
+6. **Check it**: open `https://<your-site>/api/health`. It must show `"ok":true`; otherwise `db`, `migrated`, `secrets.*` tell you exactly what is missing (booleans only, no secret values).
+
+**Workers Free plan:** password hashing (PBKDF2, 100k iterations) can exceed the 10 ms CPU limit ("Error 1102" on login/register). Either use the Workers Paid plan (recommended) or set `PBKDF2_ITERATIONS` (e.g. `20000`); existing hashes keep working.
+Without `RESEND_API_KEY`, sign-up answers `503 Email delivery is not configured` instead of pretending a code was sent.
 
 Optional secrets: `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` (redirect URI `https://<your-domain>/api/auth/google/callback`; the button appears automatically), `GITHUB_TOKEN` and `ENABLE_GITHUB_PUSH=1` (admin → GitHub page; leave unset unless you need it — it lets an admin session write to the repo).
 

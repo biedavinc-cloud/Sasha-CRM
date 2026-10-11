@@ -17,7 +17,7 @@ export async function issueOtp(env, user) {
     ),
   ]);
   const m = mail.otp(code);
-  await sendEmail(env, { to: user.email, ...m });
+  await sendEmail(env, { to: user.email, ...m }, { strict: true });
 }
 
 export async function issueLink(env, request, user, kind) {
@@ -32,6 +32,6 @@ export async function issueLink(env, request, user, kind) {
   ]);
   const link = `${origin(request)}/reset-password?token=${encodeURIComponent(token)}`;
   const m = kind === "invite" ? mail.invite(link) : mail.reset(link);
-  await sendEmail(env, { to: user.email, ...m });
+  await sendEmail(env, { to: user.email, ...m }, { strict: kind === "invite" });
 }
 

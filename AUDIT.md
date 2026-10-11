@@ -57,3 +57,19 @@ Reste ouvert (volontairement, avec la raison) :
 - `react-router` v7 et Tailwind v4 : montées de version majeures, impossibles à valider sans test navigateur ; risque actuel mitigé / limité au build.
 - Logo hébergé chez Base44 : à copier dans `public/` (le sandbox n'a pas accès à ce domaine).
 - PBKDF2 100 000 itérations (plafond Workers), sessions fixes 30 jours.
+
+## Mise à jour — 3ᵉ série (audit approfondi, tests d'interface)
+Nouveau : l'application réelle est maintenant rendue dans un navigateur simulé (jsdom) contre le serveur local — 36 tests d'interface + 87 tests API. Toutes les pages admin, partenaire et publique s'affichent sans erreur console ni appel API en échec ; parcours testés : inscription + code, connexion, mot de passe oublié/réinitialisation, demande d'accès + approbation, invitation, création de partenaire.
+
+| # | Constat | Statut |
+|---|---|---|
+| 16 | Limite D1 de 100 paramètres liés par requête (invisible en local) : une liste `$in` de plus de ~95 éléments ou un paiement de ~100 commissions aurait échoué en production. | Corrigé : listes longues insérées comme littéraux correctement échappés (testé avec 300 valeurs et une apostrophe / injection SQL). |
+| 17 | Si l'envoi d'email échouait (clé Resend absente, domaine non vérifié), l'API répondait « OK » et l'utilisateur attendait un code qui n'arrivait jamais. | Corrigé : erreur explicite (503/502) pour les codes et invitations ; la réinitialisation reste uniforme. |
+| 18 | Hachage PBKDF2 à 100 000 itérations : peut dépasser la limite CPU du plan Workers gratuit (Error 1102). | Coût configurable (`PBKDF2_ITERATIONS`) ou plan payant ; les anciens hachages restent valides (testé). |
+| 19 | Ma série précédente forçait `requested_role` à « user » : la demande « je suis du personnel » était perdue. | Corrigé (c'est seulement une demande ; l'admin attribue le rôle réel). |
+| 20 | Ma série précédente pré-approuvait les comptes invités, contrairement au texte de l'écran Users. | Corrigé : l'invitation ne contourne plus l'approbation. |
+| 21 | Page blanche sans explication si le bundle ne démarre pas (ex. mauvais dossier de sortie). | Ajouté : message explicite après 6 s, `ErrorBoundary` React, endpoint de diagnostic `/api/health`. |
+| 22 | `getGitHubIssues` sans jeton renvoyait une erreur 500. | Corrigé : 503 « GitHub non configuré ». |
+| 23 | Bug d'origine (confirmé par test) : la page de réinitialisation plantait (icône `Lock` manquante). | Corrigé en 1ʳᵉ série, désormais couvert par un test d'interface. |
+
+Limites inchangées : pas de test dans un vrai navigateur (jsdom ≠ Chrome), ni Google OAuth, ni envoi réel d'emails.

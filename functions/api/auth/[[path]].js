@@ -44,7 +44,7 @@ const routes = {
       await sendEmail(env, { to: email, ...mail.alreadyRegistered(origin(request)) });
       return json({ ok: true });
     }
-    const hash = await hashPassword(body.password);
+    const hash = await hashPassword(body.password, env);
     const now = nowIso();
     let user = existing;
     if (existing) {
@@ -102,7 +102,7 @@ const routes = {
     await rateLimit(env, request, "login-email", { limit: 10, windowSec: 900, extra: email });
     const user = await findUserByEmail(env, email);
     if (!user || !user.password_hash || password.length > 128) {
-      await fakeVerify(password);
+      await fakeVerify(password, env);
       throw new HttpError(401, GENERIC_LOGIN_ERROR);
     }
     if (!(await verifyPassword(password, user.password_hash))) throw new HttpError(401, GENERIC_LOGIN_ERROR);
@@ -138,7 +138,7 @@ const routes = {
       "SELECT * FROM auth_codes WHERE code_hash = ? AND kind IN ('reset','invite') AND used = 0"
     ).bind(await hashToken(env, token)).first();
     if (!row || row.expires_at < nowSec()) throw new HttpError(400, "This reset link is invalid or has expired");
-    const hash = await hashPassword(body.newPassword);
+    const hash = await hashPassword(body.newPassword, env);
     await env.DB.batch([
       env.DB.prepare("UPDATE auth_codes SET used = 1 WHERE id = ?").bind(row.id),
       env.DB.prepare("UPDATE users SET password_hash = ?, email_verified = 1, updated_date = ? WHERE id = ?").bind(hash, nowIso(), row.user_id),

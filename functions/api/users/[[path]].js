@@ -1,10 +1,10 @@
 //   GET   /api/users              list users (admin)
 //   PATCH /api/users/:id          change role / name (admin)
-//   POST  /api/users/invite       { email, role } -> create (or find) the user, pre-approve, email a set-password link
+//   POST  /api/users/invite       { email, role } -> create (or find) the user and email a set-password link.
+//                                 Partners/staff still go through the access-request approval, as the Users screen states.
 import { HttpError, json, readJson, normalizeEmail, uid, nowIso } from "../../_lib/util.js";
 import { requireUser, requireAdmin, publicUser } from "../../_lib/auth.js";
 import { issueLink } from "../../_lib/flows.js";
-import { entityStore } from "../../_lib/db.js";
 
 const ROLES = ["admin", "user"];
 
@@ -32,12 +32,6 @@ export async function onRequest({ request, env, params }) {
         "INSERT INTO users (id, email, role, email_verified, created_date, updated_date) VALUES (?, ?, ?, 0, ?, ?)"
       ).bind(user.id, email, role, now, now).run();
     }
-    // Admin-invited accounts skip the approval queue.
-    const requests = entityStore(env, "AccessRequest", { actor: me });
-    const existing = await requests.filter({ user_id: user.id }, { limit: 1 });
-    const approval = { status: "approved", reviewed_by: me.email, reviewed_date: now, requested_role: role };
-    if (existing.length) await requests.update(existing[0].id, approval);
-    else await requests.create({ user_id: user.id, user_email: email, ...approval });
     // Only send a set-password link if the person has no password yet.
     if (!user.password_hash) await issueLink(env, request, user, "invite");
     return json({ id: user.id, email, role: user.role }, 201);

@@ -106,7 +106,7 @@ async function registerAndVerify(c, email, password) {
   r = await user.get("/api/entities/Partner");
   ok(r.status === 403, "unapproved user cannot read data (403)", JSON.stringify(r.data));
   r = await user.post("/api/entities/AccessRequest", { user_id: "someone-else", user_email: "x@y.z", status: "approved", requested_role: "admin", phone: "+971500000000" });
-  ok(r.status === 201 && r.data.status === "pending" && r.data.user_id !== "someone-else" && r.data.requested_role === "user", "access request forced to pending/own id", JSON.stringify(r.data));
+  ok(r.status === 201 && r.data.status === "pending" && r.data.user_id !== "someone-else" && r.data.requested_role === "admin", "access request forced to pending/own id (requested role kept as a request only)", JSON.stringify(r.data));
   const reqId = r.data.id;
   r = await user.patch(`/api/entities/AccessRequest/${reqId}`, { status: "approved" });
   ok(r.status === 403, "user cannot approve own request");
@@ -115,6 +115,8 @@ async function registerAndVerify(c, email, password) {
   const me = (await user.get("/api/auth/me")).data;
   r = await user.patch(`/api/users/${me.id}`, { role: "admin" });
   ok(r.status === 403, "user cannot make themselves admin");
+  r = await user.get("/api/auth/me");
+  ok(r.data.role === "user", "asking for admin in the request does not change the real role");
   r = await anon.get("/api/entities/Partner");
   ok(r.status === 401, "anonymous cannot read entities");
   r = await user.post("/api/entities/Partner", { business_name: "Evil" });
@@ -167,6 +169,20 @@ async function registerAndVerify(c, email, password) {
   ok(r.status === 403, "admin-only entity (Client) is closed to partners");
   r = await user.post("/api/entities/AuditLog", { action: "forged" });
   ok(r.status === 403, "partner cannot forge audit logs");
+
+  console.log("\n== D1 limits & diagnostics ==");
+  const many = Array.from({ length: 300 }, (_, i) => `filler-${i}`);
+  const oPartner = (await admin.post("/api/entities/Partner", { business_name: "O'Brien Salon", user_id: "x", referral_code: `OB${run}` })).data;
+  r = await admin.get("/api/entities/Partner?q=" + encodeURIComponent(JSON.stringify({ business_name: { $in: [...many, "O'Brien Salon"] } })));
+  ok(r.status === 200 && r.data.items.length === 1 && r.data.items[0].id === oPartner.id, "300-value $in list (inlined, quote-safe) finds the right row", JSON.stringify(r.data).slice(0, 120));
+  r = await admin.get("/api/entities/Partner/count?q=" + encodeURIComponent(JSON.stringify({ business_name: { $nin: [...many, "O'Brien Salon"] } })));
+  ok(r.status === 200 && r.data.count >= 1, "300-value $nin list");
+  r = await admin.get("/api/entities/Partner?q=" + encodeURIComponent(JSON.stringify({ business_name: { $in: [...many, "x'); DROP TABLE entities;--"] } })));
+  ok(r.status === 200 && r.data.items.length === 0, "SQL-looking value inside a long $in list is just data");
+  r = await admin.get("/api/entities/Partner/count");
+  ok(r.status === 200 && r.data.count >= 2, "tables intact after the injection attempt");
+  r = await new Client().get("/api/health");
+  ok(r.data.db === true && r.data.migrated === true && r.data.indexes === true && !JSON.stringify(r.data).includes("local-dev-secret"), "/api/health reports db+migrations+indexes, leaks no secrets", JSON.stringify(r.data));
 
   console.log("\n== Public referral functions + business logic ==");
   r = await anon.post("/api/fn/trackClick", { referralCode: `ONE${run}`, utmSource: "ig" });

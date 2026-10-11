@@ -1,26 +1,40 @@
-// Transactional email through Resend (https://resend.com). Without RESEND_API_KEY the message is logged
-// (local development only).
-export async function sendEmail(env, { to, subject, text, html }) {
-  if (!env.RESEND_API_KEY) {
-    console.log(`[email:dev] to=${to} subject=${subject}\n${text}`);
-    return { ok: true, dev: true };
+import { HttpError } from "./util.js";
+
+// Transactional email through Resend (https://resend.com).
+// strict=true: failures are reported to the caller (verification codes, invitations).
+// strict=false: failures are only logged (password-reset and notices must answer identically whether or not the
+// account exists, so they cannot expose delivery errors).
+// Local development: set DEV_EMAIL_LOG=1 (in .dev.vars) to print messages instead of sending them.
+export async function sendEmail(env, { to, subject, text, html }, { strict = false } = {}) {
+  try {
+    if (!env.RESEND_API_KEY) {
+      if (env.DEV_EMAIL_LOG === "1") {
+        console.log(`[email:dev] to=${to} subject=${subject}\n${text}`);
+        return true;
+      }
+      throw new HttpError(503, "Email delivery is not configured on this deployment (missing RESEND_API_KEY)");
+    }
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: env.EMAIL_FROM || "Sasha Connect <no-reply@example.com>",
+        to: [to],
+        subject,
+        text,
+        html: html || `<pre style="font-family:inherit;white-space:pre-wrap">${escapeHtml(text)}</pre>`,
+      }),
+    });
+    if (!res.ok) {
+      console.error("Resend rejected the email:", res.status, await res.text().catch(() => ""));
+      throw new HttpError(502, "We could not send the email. Please try again in a few minutes.");
+    }
+    return true;
+  } catch (e) {
+    if (strict) throw e;
+    console.error("Email not sent:", e && e.message);
+    return false;
   }
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: env.EMAIL_FROM || "Sasha Connect <no-reply@example.com>",
-      to: [to],
-      subject,
-      text,
-      html: html || `<pre style="font-family:inherit;white-space:pre-wrap">${escapeHtml(text)}</pre>`,
-    }),
-  });
-  if (!res.ok) {
-    console.error("Resend error", res.status, await res.text().catch(() => ""));
-    return { ok: false };
-  }
-  return { ok: true };
 }
 
 const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
