@@ -3,12 +3,9 @@ name = "sasha-crm"
 compatibility_date = "2025-09-01"
 pages_build_output_dir = "dist"
 
-# D1 binding: uncomment once the database exists and paste its real id
-# (Cloudflare dashboard -> Storage & Databases -> D1 -> sasha-crm -> Database ID).
-# Until then the API answers "Database is not configured" and /api/health shows db:false.
-#
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "sasha-crm"
-# database_id = "PASTE-THE-REAL-DATABASE-ID-HERE"
-# migrations_dir = "migrations"
+# Production database (created in the Cloudflare account; the id is an identifier, not a secret).
+[[d1_databases]]
+binding = "DB"
+database_name = "sasha-crm"
+database_id = "c1ae2b6e-17ec-419e-a951-58ef1383a0ed"
+migrations_dir = "migrations"
