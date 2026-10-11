@@ -4,7 +4,7 @@ export async function onRequest(context) {
   const { request, env } = context;
   try {
     if (!env.DB && !new URL(request.url).pathname.endsWith("/api/health")) {
-      return json({ error: "Database is not configured: bind a D1 database as DB (Pages -> Settings -> Bindings)" }, 503);
+      return json({ error: "Database is not configured: add the D1 binding `DB` (database_id) to wrangler.toml and redeploy" }, 503);
     }
     // CSRF defence in depth (cookies are also SameSite=Lax): state-changing requests must be same-origin.
     if (!["GET", "HEAD", "OPTIONS"].includes(request.method)) {

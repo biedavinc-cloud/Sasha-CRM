@@ -1,0 +1,9 @@
+# Local development only (used by `npm run cf:migrate:local`; `npm run cf:dev` binds the same local database).
+name = "sasha-crm"
+compatibility_date = "2025-09-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sasha-crm"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"

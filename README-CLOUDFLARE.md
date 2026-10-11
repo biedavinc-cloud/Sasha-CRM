@@ -29,14 +29,14 @@ WRANGLER_LOG=<file with the cf:dev output> npm run test:api   # API checks
 WRANGLER_LOG=<file with the cf:dev output> npm run test:ui    # UI tests
 ```
 
-## First deploy (Cloudflare dashboard)
-`wrangler.toml` is for local dev only (it has no `pages_build_output_dir`, so Pages ignores it): bindings and secrets live in the dashboard.
+## First deploy
+`wrangler.toml` is the deployment config (`pages_build_output_dir = "dist"`), so the output directory never depends on a dashboard setting. `wrangler.local.toml` is for local dev only.
 
-1. **D1**: Storage & Databases → D1 → Create `sasha-crm`. Open it → Console → run `migrations/0001_init.sql`, then `migrations/0002_indexes.sql`.
-2. **Pages project** (connected to this repo): build command `npm run build`, output directory `dist`.
-3. Project → Settings → **Bindings** → Add → D1 database → variable name **`DB`** → `sasha-crm` (Production and Preview).
+1. **D1**: Cloudflare → Storage & Databases → D1 → Create `sasha-crm`. Copy its **Database ID**. Open it → Console → run `migrations/0001_init.sql`, then `migrations/0002_indexes.sql`.
+2. **Bind it**: in `wrangler.toml`, uncomment the `[[d1_databases]]` block and paste the real `database_id` (commit to `main`).
+3. **Pages project** (connected to this repo): build command `npm run build`.
 4. Project → Settings → **Variables and Secrets** (type: Secret): `AUTH_SECRET` (random, 32+ chars), `ADMIN_EMAILS` (comma list; these emails become admin once verified), `RESEND_API_KEY`, `EMAIL_FROM` (e.g. `Sasha Connect <no-reply@yourdomain.com>`).
-5. Deployments → Retry deployment. Until the `DB` binding exists, the API answers `503 Database is not configured`.
+5. Deployments → Retry deployment. Until the D1 binding exists, the API answers `503 Database is not configured`.
 6. **Check it**: open `https://<your-site>/api/health`. It must show `"ok":true`; otherwise `db`, `migrated`, `secrets.*` tell you exactly what is missing (booleans only, no secret values).
 
 **Workers Free plan:** password hashing (PBKDF2, 100k iterations) can exceed the 10 ms CPU limit ("Error 1102" on login/register). Either use the Workers Paid plan (recommended) or set `PBKDF2_ITERATIONS` (e.g. `20000`); existing hashes keep working.
