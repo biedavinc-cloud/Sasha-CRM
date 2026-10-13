@@ -104,3 +104,7 @@ export const TONE_CLASSES = {
   good: "bg-emerald-50 text-emerald-700",
   bad: "bg-rose-50 text-rose-700",
 };
+// Referral links are built from the current site address + the partner's code, so they stay correct if the domain changes
+// (pages.dev -> custom domain). The stored referral_link is only a fallback.
+export const referralLinkOf = (partner) =>
+  partner && partner.referral_code ? `${window.location.origin}/r/${partner.referral_code}` : (partner && partner.referral_link) || "";

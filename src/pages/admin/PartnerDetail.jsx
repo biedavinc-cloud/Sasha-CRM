@@ -4,7 +4,7 @@ import { ArrowLeft, Save, Copy, Check, Wallet, TrendingUp } from "lucide-react";
 import { api } from "@/api/client";
 import { useRecord, useCollection, useAggregate } from "@/hooks/crm";
 import { PageHeader, StatusBadge, Card, Spinner, Th, Td, StatCard } from "@/components/crm/ui";
-import { formatAED, formatDate, PARTNER_STATUSES, PARTNER_TYPES, REFERRAL_STATUSES, COMMISSION_STATUSES, PAYOUT_STATUSES } from "@/lib/format";
+import { formatAED, formatDate, PARTNER_STATUSES, PARTNER_TYPES, REFERRAL_STATUSES, COMMISSION_STATUSES, PAYOUT_STATUSES, referralLinkOf } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,7 +49,7 @@ export default function PartnerDetail() {
     } catch (e) { alert(e.message); } finally { setSaving(false); }
   };
 
-  const copyLink = () => { navigator.clipboard.writeText(partner.referral_link || ""); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+  const copyLink = () => { navigator.clipboard.writeText(referralLinkOf(partner)); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
   return (
     <div>
@@ -82,7 +82,7 @@ export default function PartnerDetail() {
           </div>
           <div className="space-y-2">
             <div><p className="text-xs text-muted-foreground mb-1">Referral Code</p><code className="text-sm bg-muted px-3 py-2 rounded-lg block">{partner.referral_code}</code></div>
-            <div><p className="text-xs text-muted-foreground mb-1">Referral Link</p><code className="text-xs bg-muted px-3 py-2 rounded-lg block break-all">{partner.referral_link}</code></div>
+            <div><p className="text-xs text-muted-foreground mb-1">Referral Link</p><code className="text-xs bg-muted px-3 py-2 rounded-lg block break-all">{referralLinkOf(partner)}</code></div>
           </div>
         </Card>
       </div>

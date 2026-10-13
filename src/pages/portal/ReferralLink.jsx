@@ -1,3 +1,4 @@
+import { referralLinkOf } from "@/lib/format";
 import React, { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Copy, Check, Link as LinkIcon, Share2 } from "lucide-react";
@@ -9,7 +10,7 @@ export default function ReferralLink() {
   const [copiedLink, setCopiedLink] = useState(false);
 
   const copyCode = () => { navigator.clipboard.writeText(partner.referral_code); setCopiedCode(true); setTimeout(() => setCopiedCode(false), 2000); };
-  const copyLink = () => { navigator.clipboard.writeText(partner.referral_link); setCopiedLink(true); setTimeout(() => setCopiedLink(false), 2000); };
+  const copyLink = () => { navigator.clipboard.writeText(referralLinkOf(partner)); setCopiedLink(true); setTimeout(() => setCopiedLink(false), 2000); };
 
   return (
     <div>
@@ -27,7 +28,7 @@ export default function ReferralLink() {
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-3"><div className="h-9 w-9 rounded-xl bg-brand-soft/40 flex items-center justify-center"><Share2 className="h-4 w-4 text-brand" /></div><h3 className="text-sm font-semibold">Your Referral Link</h3></div>
           <div className="flex items-center gap-2">
-            <code className="flex-1 bg-muted px-4 py-3 rounded-xl text-xs font-medium break-all">{partner.referral_link}</code>
+            <code className="flex-1 bg-muted px-4 py-3 rounded-xl text-xs font-medium break-all">{referralLinkOf(partner)}</code>
             <button onClick={copyLink} className="px-3 py-3 rounded-xl bg-brand text-primary-foreground hover:bg-brand-dark transition-colors shrink-0">{copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}</button>
           </div>
         </Card>

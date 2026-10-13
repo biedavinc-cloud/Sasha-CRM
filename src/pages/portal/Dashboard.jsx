@@ -3,7 +3,7 @@ import { useOutletContext, Link } from "react-router-dom";
 import { Share2, Wallet, TrendingUp, Copy, Check, ArrowUpRight } from "lucide-react";
 import { useCount, useCollection, useAggregate } from "@/hooks/crm";
 import { StatCard, PageHeader, Card, Spinner, StatusBadge, Th, Td } from "@/components/crm/ui";
-import { formatAED, formatDate, REFERRAL_STATUSES } from "@/lib/format";
+import { formatAED, formatDate, REFERRAL_STATUSES, referralLinkOf } from "@/lib/format";
 
 export default function PartnerDashboard() {
   const { partner } = useOutletContext();
@@ -20,7 +20,7 @@ export default function PartnerDashboard() {
   const payable = bal("payable");
   const paid = bal("paid");
 
-  const copyLink = () => { navigator.clipboard.writeText(partner.referral_link || ""); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+  const copyLink = () => { navigator.clipboard.writeText(referralLinkOf(partner)); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
   return (
     <div>
@@ -30,7 +30,7 @@ export default function PartnerDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide">Your Referral Link</p>
-            <code className="text-sm font-medium bg-card px-3 py-2 rounded-lg block mt-1.5 break-all border border-border">{partner.referral_link}</code>
+            <code className="text-sm font-medium bg-card px-3 py-2 rounded-lg block mt-1.5 break-all border border-border">{referralLinkOf(partner)}</code>
             <p className="text-xs text-muted-foreground mt-1.5">Code: <span className="font-medium text-foreground">{partner.referral_code}</span></p>
           </div>
           <button onClick={copyLink} className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand text-primary-foreground text-sm font-medium hover:bg-brand-dark transition-colors shrink-0">
