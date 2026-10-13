@@ -135,6 +135,10 @@ export default function Register() {
             Resend
           </button>
         </p>
+        <p className="text-center text-sm text-muted-foreground mt-2">
+          Already have an account?{" "}
+          <Link to="/login" className="text-primary font-medium hover:underline">Log in</Link>
+        </p>
       </AuthLayout>
     );
   }
