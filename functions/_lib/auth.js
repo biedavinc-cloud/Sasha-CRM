@@ -91,6 +91,12 @@ export async function destroySession(env, request) {
   if (token) await env.DB.prepare("DELETE FROM sessions WHERE token_hash = ?").bind(await hashToken(env, token)).run();
 }
 
+export async function destroyOtherSessions(env, request, userId) {
+  const token = parseCookies(request.headers.get("cookie"))[COOKIE];
+  const keep = token ? await hashToken(env, token) : "";
+  await env.DB.prepare("DELETE FROM sessions WHERE user_id = ? AND token_hash != ?").bind(userId, keep).run();
+}
+
 export async function destroyAllSessions(env, userId) {
   await env.DB.prepare("DELETE FROM sessions WHERE user_id = ?").bind(userId).run();
 }

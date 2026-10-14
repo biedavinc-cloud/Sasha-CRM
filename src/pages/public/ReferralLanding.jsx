@@ -39,6 +39,10 @@ export default function ReferralLanding() {
   const [clickId, setClickId] = useState(null);
   const [form, setForm] = useState({ name: "", phone: "", email: "", service: "" });
   const [errorMsg, setErrorMsg] = useState("");
+  const [formError, setFormError] = useState("");
+  const [honeypot, setHoneypot] = useState("");
+
+  useEffect(() => { document.title = "Book your consultation | Sasha Aesthetics"; }, []);
 
   useEffect(() => {
     (async () => {
@@ -63,13 +67,17 @@ export default function ReferralLanding() {
 
   const submit = async (e) => {
     e.preventDefault();
+    setFormError("");
+    if (honeypot) { setStage("success"); return; } // a bot filled the hidden field: pretend it worked, store nothing
+    const phone = form.phone.replace(/[\s().-]/g, "");
+    if (!/^\+?[0-9]{7,15}$/.test(phone)) { setFormError("Please enter a valid phone number, e.g. +971 50 123 4567."); return; }
     setStage("submitting");
     try {
       await api.functions.invoke("captureReferral", {
         referralCode: code,
-        clientName: form.name,
-        clientPhone: form.phone,
-        clientEmail: form.email,
+        clientName: form.name.trim(),
+        clientPhone: phone,
+        clientEmail: form.email.trim(),
         serviceInterest: form.service,
         clickId,
         utmSource: searchParams.get("utm_source"),
@@ -78,8 +86,10 @@ export default function ReferralLanding() {
       });
       setStage("success");
     } catch (e) {
-      setErrorMsg(e.response?.data?.error || "Something went wrong");
-      setStage("error");
+      const status = e.response?.status;
+      const msg = e.response?.data?.error || "Something went wrong. Please try again.";
+      if (status === 404) { setErrorMsg(msg); setStage("error"); } // the link itself is no longer valid
+      else { setFormError(msg); setStage("form"); }                // anything else: keep the form so the visitor can fix it
     }
   };
 
@@ -148,6 +158,7 @@ export default function ReferralLanding() {
                 </p>
               </div>
               <form onSubmit={submit} className="bg-card border border-border p-8 shadow-sm rounded-none space-y-4">
+                <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
                   <Input
@@ -195,12 +206,16 @@ export default function ReferralLanding() {
                     </SelectContent>
                   </Select>
                 </div>
+                {formError && <p role="alert" className="text-sm text-destructive">{formError}</p>}
                 <Button type="submit" className="w-full !rounded-none" disabled={stage === "submitting"}>
                   {stage === "submitting" ? "Submitting…" : "Submit Referral"}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1.5">
                   <Sparkles className="w-3 h-3" />
                   No payment required — we'll contact you to book
+                </p>
+                <p className="text-[11px] text-muted-foreground/80 text-center leading-snug">
+                  By submitting, you agree that Sasha Aesthetic Clinic may contact you about your enquiry.
                 </p>
               </form>
             </>

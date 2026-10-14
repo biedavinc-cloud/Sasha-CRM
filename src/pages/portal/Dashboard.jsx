@@ -12,6 +12,8 @@ export default function PartnerDashboard() {
   const successful = useCount("Referral", { ...partnerFilter, status: { $in: ["treatment_completed", "satisfaction_confirmed", "commission_pending", "commission_payable", "paid"] } });
   const balRows = useAggregate("Commission", { query: partnerFilter, groupBy: "status", sum: "commission_amount" });
   const { items: recent, loading } = useCollection("Referral", partnerFilter, { sort: "-created_date", limit: 5 });
+  const { items: comms } = useCollection("Commission", partnerFilter, { limit: 500 });
+  const commByReferral = Object.fromEntries(comms.map((c) => [c.referral_id, c.commission_amount]));
   const [copied, setCopied] = useState(false);
 
   const bal = (st) => balRows.find((r) => r.status === st)?.sum_commission_amount || 0;
@@ -65,7 +67,7 @@ export default function PartnerDashboard() {
                     <Td className="font-medium">{r.client_name}</Td>
                     <Td className="text-muted-foreground">{r.service_name || r.service_category || "—"}</Td>
                     <Td><StatusBadge status={r.status} map={REFERRAL_STATUSES} /></Td>
-                    <Td className="text-right">{r.gross_amount ? formatAED(r.gross_amount) : "—"}</Td>
+                    <Td className="text-right">{commByReferral[r.id] != null ? formatAED(commByReferral[r.id]) : "—"}</Td>
                     <Td className="text-muted-foreground">{formatDate(r.created_date)}</Td>
                   </tr>
                 ))}

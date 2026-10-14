@@ -30,16 +30,32 @@ Chaque partenaire a son propre tableau de bord et ne voit **que ses données** (
 8. **Paiement** (Admin → Payouts)
    L'administrateur regroupe les commissions payables d'un partenaire dans un **paiement** ; les commissions passent à *paid*. Après le virement, il marque le paiement comme effectué en indiquant la référence.
 
+## Des liens d'affiliation professionnels
+
+- **Lien court et lisible** : `https://VOTRE-SITE/r/GLOWSALON`. Le code est généré automatiquement à partir du nom du commerce, il est **unique** (jamais deux partenaires avec le même lien) et fonctionne en majuscules comme en minuscules. Vous pouvez aussi choisir le code à la création (« Link code »).
+- **Belle prévisualisation** quand le lien est collé dans WhatsApp, Instagram, Facebook ou iMessage : titre, texte « recommandé par <partenaire> » et image. Les pages de parrainage ne sont pas indexées par Google.
+- **Page client soignée** : formulaire simple, numéro de téléphone vérifié, message clair en cas d'erreur, protection contre les robots et contre le double envoi (un client ne crée jamais deux parrainages).
+- **Espace partenaire → Referral Link** : copier le lien, partager sur WhatsApp ou par email en un clic, **QR code** téléchargeable (PNG ou SVG) pour comptoir, flyers et cartes de visite, et **un lien suivi par canal** (Instagram, WhatsApp, Facebook, email, QR) pour savoir d'où viennent les clients.
+- **Votre propre domaine** : pour un lien du type `join.sashaaesthetics.com/r/GLOWSALON`, ajoutez un domaine personnalisé au projet Cloudflare Pages (Custom domains). Les liens se mettent à jour tout seuls.
+
+## Sécurité des tableaux de bord
+
+- Chaque partenaire ne voit **que ses propres** parrainages, commissions et paiements : c'est contrôlé par le serveur, pas seulement caché à l'écran.
+- Les informations internes de la clinique ne sont **jamais envoyées** aux partenaires : score anti-fraude, adresse IP des clients, notes internes, nom de l'approbateur.
+- Un partenaire ne peut rien créer, modifier ni supprimer en dehors de son profil (téléphone, adresse, contact).
+- Chaque utilisateur peut **changer son mot de passe** (Profil pour les partenaires, Settings pour l'administrateur) ; les autres appareils sont alors déconnectés.
+- Connexion protégée (blocage après trop d'essais), sessions sécurisées, codes à usage unique, en-têtes de sécurité (HTTPS forcé, anti-clickjacking).
+
 ## Ce que voit chaque partenaire (Portail)
 
 | Page | Contenu |
 |---|---|
-| Dashboard | clics, parrainages, gains **en attente / payables / payés** |
+| Dashboard | parrainages, gains **en attente / payables / payés**, commission de chaque parrainage |
 | My Referrals | ses parrainages et leur avancement |
 | Commissions | chaque commission, son montant et son statut |
 | Payouts | ses paiements reçus et leur référence |
-| Referral Link | son lien à partager |
-| Profile | ses coordonnées |
+| Referral Link | son lien, QR code, liens suivis par canal, partage WhatsApp / email |
+| Profile | ses coordonnées et son mot de passe |
 
 Il ne voit jamais les autres partenaires ni les données internes de la clinique.
 

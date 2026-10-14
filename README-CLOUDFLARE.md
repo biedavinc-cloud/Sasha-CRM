@@ -9,8 +9,8 @@ functions/api/users/    admin: list / change role / invite
 functions/api/fn/       business logic (functions/_fn/*): commissions, payouts, referral capture, GitHub
 migrations/             D1 schema
 src/api/client.js       frontend client (replaces the Base44 SDK)
-scripts/smoke-test.mjs  87 API checks (auth, RLS, approval gate, money rules, rate limits…)
-tests/ui/               36 UI tests: the real <App/> in jsdom against the local server (auth screens, every admin/portal page, approve/invite/create-partner)
+scripts/smoke-test.mjs  125 API checks (auth, RLS, field-level security, referral codes, money rules, rate limits…)
+tests/ui/               42 UI tests: the real <App/> in jsdom against the local server (auth, every admin/portal page, approve/invite/create-partner, partner link page, public form)
 ```
 
 ## Local development

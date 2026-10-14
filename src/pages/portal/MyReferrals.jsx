@@ -8,6 +8,8 @@ import { REFERRAL_STATUSES, formatDate, formatAED } from "@/lib/format";
 export default function MyReferrals() {
   const { partner } = useOutletContext();
   const { items: referrals, loading } = useCollection("Referral", { partner_id: partner.id }, { sort: "-created_date", limit: 200 });
+  const { items: comms } = useCollection("Commission", { partner_id: partner.id }, { limit: 500 });
+  const commByReferral = Object.fromEntries(comms.map((c) => [c.referral_id, c.commission_amount]));
 
   return (
     <div>
@@ -26,7 +28,7 @@ export default function MyReferrals() {
                     <Td className="font-medium">{r.client_name}</Td>
                     <Td className="text-muted-foreground">{r.service_name || r.service_category || "—"}</Td>
                     <Td><StatusBadge status={r.status} map={REFERRAL_STATUSES} /></Td>
-                    <Td className="text-right">{r.gross_amount ? formatAED(r.gross_amount) : "—"}</Td>
+                    <Td className="text-right">{commByReferral[r.id] != null ? formatAED(commByReferral[r.id]) : "—"}</Td>
                     <Td className="text-muted-foreground">{formatDate(r.created_date)}</Td>
                   </tr>
                 ))}

@@ -4,8 +4,9 @@ export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { referralCode, utmSource, utmMedium, utmCampaign, referrerSource } = body;
-    if (!referralCode) return Response.json({ error: 'referralCode required' }, { status: 400 });
+    const { utmSource, utmMedium, utmCampaign, referrerSource } = body;
+    const referralCode = String(body.referralCode ?? '').trim().toUpperCase();
+    if (!/^[A-Z0-9][A-Z0-9-]{2,39}$/.test(referralCode)) return Response.json({ error: 'Invalid referral code' }, { status: 404 });
 
     const partners = await base44.asServiceRole.entities.Partner.filter({ referral_code: referralCode, status: 'active' });
     const partnerArr = (partners as any)?.items || partners;
@@ -21,10 +22,10 @@ export default async function(req: Request): Promise<Response> {
       referral_code: referralCode,
       ip_address: ip,
       user_agent: userAgent,
-      utm_source: utmSource || null,
-      utm_medium: utmMedium || null,
-      utm_campaign: utmCampaign || null,
-      referrer_source: referrerSource || null,
+      utm_source: typeof utmSource === 'string' ? utmSource.slice(0, 60) || null : null,
+      utm_medium: typeof utmMedium === 'string' ? utmMedium.slice(0, 60) || null : null,
+      utm_campaign: typeof utmCampaign === 'string' ? utmCampaign.slice(0, 80) || null : null,
+      referrer_source: typeof referrerSource === 'string' ? referrerSource.slice(0, 200) || null : null,
       converted: false,
     });
 

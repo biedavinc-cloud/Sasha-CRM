@@ -3,6 +3,7 @@ import { useOutletContext } from "react-router-dom";
 import { Save, Check } from "lucide-react";
 import { api } from "@/api/client";
 import { PageHeader, Card } from "@/components/crm/ui";
+import ChangePassword from "@/components/crm/ChangePassword";
 import { PARTNER_TYPES } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,7 @@ export default function Profile() {
           </div>
         </Card>
       </div>
+      <div className="mt-4"><ChangePassword /></div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { HttpError, json, readJson, normalizeEmail, uid, nowIso, nowSec, randomToken, randomDigits, clientIp } from "../../_lib/util.js";
 import {
   hashPassword, verifyPassword, fakeVerify, assertPasswordPolicy, hashCode, hashToken, createSession, clearSessionCookie,
-  destroySession, destroyAllSessions, getUser, publicUser, applyBootstrapRole, rateLimit, secret,
+  destroySession, destroyAllSessions, destroyOtherSessions, requireUser, getUser, publicUser, applyBootstrapRole, rateLimit, secret,
 } from "../../_lib/auth.js";
 import { sendEmail, mail } from "../../_lib/email.js";
 import { issueOtp, issueLink } from "../../_lib/flows.js";
@@ -111,6 +111,22 @@ const routes = {
       throw new HttpError(403, "Please verify your email address. We sent you a new code.", { code: "verification_required", email });
     }
     return startSession(env, request, user);
+  },
+
+  "POST change-password": async ({ env, request }) => {
+    const user = await requireUser(env, request);
+    const body = await readJson(request);
+    await rateLimit(env, request, "change-pw", { limit: 8, windowSec: 900, extra: user.id });
+    const row = await env.DB.prepare("SELECT password_hash FROM users WHERE id = ?").bind(user.id).first();
+    const current = typeof body.currentPassword === "string" ? body.currentPassword : "";
+    if (!row || !row.password_hash || current.length > 128 || !(await verifyPassword(current, row.password_hash))) {
+      throw new HttpError(400, "Your current password is incorrect");
+    }
+    assertPasswordPolicy(body.newPassword);
+    if (body.newPassword === current) throw new HttpError(400, "Choose a new password that is different from the current one");
+    await env.DB.prepare("UPDATE users SET password_hash = ?, updated_date = ? WHERE id = ?").bind(await hashPassword(body.newPassword, env), nowIso(), user.id).run();
+    await destroyOtherSessions(env, request, user.id); // other devices are signed out, this one stays
+    return json({ ok: true });
   },
 
   "POST logout": async ({ env, request }) => {

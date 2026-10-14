@@ -55,3 +55,38 @@ export function scopedQuery(entity, action, user, query = {}) {
 export function assertCanCreate(entity, user) {
   if (restriction(entity, "create", user) !== true) throw new HttpError(403, "Forbidden");
 }
+
+// ---------- field-level security ----------
+// Partners may read their own rows, but not the clinic's internal fields (fraud scoring, client IPs, admin notes...).
+const PARTNER_HIDDEN = {
+  Referral: ["ip_address", "fraud_flag", "fraud_score", "fraud_reason", "click_id", "created_by"],
+  Commission: ["approved_by", "adjustment_notes", "created_by"],
+  Partner: ["contract_notes", "created_by"],
+  Payout: ["notes", "created_by"],
+};
+const hiddenFor = (entity, user) => (user.role === "admin" ? [] : PARTNER_HIDDEN[entity] || []);
+
+export function redact(entity, user, rows) {
+  const hidden = hiddenFor(entity, user);
+  if (!hidden.length) return rows;
+  const strip = (r) => { const o = { ...r }; for (const k of hidden) delete o[k]; return o; };
+  return Array.isArray(rows) ? rows.map(strip) : strip(rows);
+}
+
+// A hidden field must not be usable in filters/sorts/projections either (that would leak it by inference).
+export function assertVisibleFields(entity, user, { query, sort, fields, groupBy, sum } = {}) {
+  const hidden = new Set(hiddenFor(entity, user));
+  if (!hidden.size) return;
+  const deny = () => { throw new HttpError(400, "Field not available"); };
+  const scan = (q, depth = 0) => {
+    if (!q || typeof q !== "object" || depth > 6) return;
+    for (const [k, v] of Object.entries(q)) {
+      if (k === "$or" || k === "$and") { if (Array.isArray(v)) v.forEach((s) => scan(s, depth + 1)); }
+      else if (hidden.has(k)) deny();
+    }
+  };
+  scan(query);
+  if (typeof sort === "string" && hidden.has(sort.replace(/^[-+]/, "").replace(/^sum_/, ""))) deny();
+  if (Array.isArray(fields) && fields.some((f) => hidden.has(f))) deny();
+  if (hidden.has(groupBy) || hidden.has(sum)) deny();
+}

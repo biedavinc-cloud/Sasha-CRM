@@ -1,3 +1,4 @@
+import ChangePassword from "@/components/crm/ChangePassword";
 import React, { useState, useEffect } from "react";
 import { Building2, Share2, Bell, Save } from "lucide-react";
 import { api } from "@/api/client";
@@ -110,6 +111,7 @@ export default function Settings() {
           </div>
         </Card>
       </div>
+      <div className="mt-4"><ChangePassword /></div>
     </div>
   );
 }

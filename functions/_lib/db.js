@@ -187,7 +187,7 @@ export function entityStore(env, name, { actor } = {}) {
       if (!input || typeof input !== "object" || Array.isArray(input)) throw new HttpError(400, "Invalid record");
       const data = { ...def.defaults, ...stripMeta(input) };
       for (const r of def.required) {
-        if (data[r] === undefined || data[r] === null || data[r] === "") throw new HttpError(400, `Missing required field: ${r}`);
+        if (data[r] === undefined || data[r] === null) throw new HttpError(400, `Missing required field: ${r}`);
       }
       validateEnums(def, data);
       const now = nowIso();

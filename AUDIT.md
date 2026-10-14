@@ -73,3 +73,17 @@ Nouveau : l'application réelle est maintenant rendue dans un navigateur simulé
 | 23 | Bug d'origine (confirmé par test) : la page de réinitialisation plantait (icône `Lock` manquante). | Corrigé en 1ʳᵉ série, désormais couvert par un test d'interface. |
 
 Limites inchangées : pas de test dans un vrai navigateur (jsdom ≠ Chrome), ni Google OAuth, ni envoi réel d'emails.
+
+## Mise à jour — 4ᵉ série (tableaux de bord partenaires, sécurité, liens)
+Tests : 125 vérifications API + 42 tests d'interface (rendu réel de l'application).
+
+| # | Constat | Statut |
+|---|---|---|
+| 24 | **Fuite d'informations internes** : un partenaire pouvait lire, via l'API, le score anti-fraude, l'IP des clients, les notes de contrat, le nom de l'approbateur et les notes de paiement de ses propres lignes (et filtrer dessus pour les déduire). | Corrigé : champs retirés côté serveur + filtres/tris/agrégats sur ces champs refusés. |
+| 25 | Les colonnes « Commission » du tableau de bord et de « My Referrals » affichaient le **prix du soin** (ex. 1 500) au lieu de la commission (150). | Corrigé. |
+| 26 | Codes de parrainage fabriqués dans le navigateur (`SASHA-NOM`) : **doublons possibles** (deux partenaires de même nom → même lien) et noms arabes → tous le même code. | Corrigé : codes générés et garantis uniques par le serveur, code personnalisé possible, insensible à la casse. |
+| 27 | Formulaire public : une erreur de validation remplaçait la page par « Referral Link Invalid » ; pas de contrôle du téléphone/email ; double envoi = deux parrainages ; n'importe quel `clickId` (même d'un autre partenaire) était accepté ; pas d'anti-robot. | Corrigé. |
+| 28 | Pas de moyen de changer son mot de passe (alors que les comptes sont créés avec un mot de passe provisoire). | Ajouté (API + écrans) ; les autres appareils sont déconnectés. |
+| 29 | Liens peu « professionnels » : pas de prévisualisation sociale, pas de QR code, pas de liens par canal, partenaire créé « Pending » par défaut (lien inactif). | Ajoutés / corrigé. |
+| 30 | Total « commission » du tableau de bord admin incluait rejetées et remboursées. | Corrigé. |
+| 31 | Création d'un partenaire sans email échouait (champ vide traité comme absent). | Corrigé. |

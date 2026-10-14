@@ -17,7 +17,7 @@ export default function Dashboard() {
   const { items: recentReferrals, loading } = useCollection("Referral", {}, { sort: "-created_date", limit: 6 });
 
   const commByStatus = (status) => commissionRows.find((r) => r.status === status)?.sum_commission_amount || 0;
-  const totalCommission = commissionRows.reduce((s, r) => s + (r.sum_commission_amount || 0), 0);
+  const totalCommission = commissionRows.filter((r) => !["rejected", "refunded"].includes(r.status)).reduce((s, r) => s + (r.sum_commission_amount || 0), 0);
   const pendingCommission = commByStatus("pending") + commByStatus("approved");
   const payableCommission = commByStatus("payable");
   const paidCommission = commByStatus("paid");

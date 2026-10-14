@@ -81,6 +81,7 @@ export const api = {
     register: ({ email, password, full_name }) => post("/auth/register", { email, password, full_name }),
     verifyOtp: ({ email, otpCode }) => post("/auth/verify-otp", { email, otpCode }),
     resendOtp: (email) => post("/auth/resend-otp", { email }),
+    changePassword: (currentPassword, newPassword) => post("/auth/change-password", { currentPassword, newPassword }),
     resetPasswordRequest: (email) => post("/auth/password-reset/request", { email }),
     resetPassword: ({ resetToken, newPassword }) => post("/auth/password-reset/confirm", { resetToken, newPassword }),
     loginWithGoogle: (returnTo = "/") => { window.location.href = "/api/auth/google/start?returnTo=" + enc(returnTo); },

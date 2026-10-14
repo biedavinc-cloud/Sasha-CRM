@@ -9,7 +9,8 @@
 import { HttpError, json, readJson } from "../../_lib/util.js";
 import { requireUser } from "../../_lib/auth.js";
 import { entityStore, hasEntity } from "../../_lib/db.js";
-import { scopedQuery, assertCanCreate } from "../../_lib/rls.js";
+import { scopedQuery, assertCanCreate, redact, assertVisibleFields } from "../../_lib/rls.js";
+import { preparePartnerCreate, preparePartnerUpdate } from "../../_lib/partners.js";
 
 const parseQ = (url) => {
   const raw = url.searchParams.get("q");
@@ -37,15 +38,17 @@ export async function onRequest({ request, env, params }) {
   // ----- collection-level -----
   if (!a) {
     if (method === "GET") {
-      const query = scopedQuery(name, "read", user, parseQ(url));
       const fields = url.searchParams.get("fields");
+      const userQuery = parseQ(url);
+      assertVisibleFields(name, user, { query: userQuery, sort: url.searchParams.get("sort"), fields: fields ? fields.split(",") : undefined });
+      const query = scopedQuery(name, "read", user, userQuery);
       const rows = await store.filter(query, {
         sort: url.searchParams.get("sort") || undefined,
         limit: url.searchParams.get("limit") || undefined,
         skip: url.searchParams.get("skip") || undefined,
         fields: fields ? fields.split(",") : undefined,
       });
-      return json({ items: [...rows] });
+      return json({ items: redact(name, user, [...rows]) });
     }
     if (method === "POST") {
       assertCanCreate(name, user);
@@ -63,16 +66,20 @@ export async function onRequest({ request, env, params }) {
           status: "pending",
         };
       }
+      if (name === "Partner") body = await preparePartnerCreate(store, body, url.origin);
       return json(await store.create(body), 201);
     }
     throw new HttpError(405, "Method not allowed");
   }
 
   if (a === "count" && method === "GET") {
-    return json({ count: await store.count(scopedQuery(name, "read", user, parseQ(url))) });
+    const q = parseQ(url);
+    assertVisibleFields(name, user, { query: q });
+    return json({ count: await store.count(scopedQuery(name, "read", user, q)) });
   }
   if (a === "aggregate" && method === "POST") {
     const opts = await readJson(request);
+    assertVisibleFields(name, user, { query: opts.query, sort: opts.sort, groupBy: opts.groupBy, sum: opts.sum });
     return json(await store.aggregate({ ...opts, query: scopedQuery(name, "read", user, opts.query || {}) }));
   }
 
@@ -82,12 +89,14 @@ export async function onRequest({ request, env, params }) {
   if (method === "GET") {
     const rows = await store.filter(scopedQuery(name, "read", user, { id }), { limit: 1 });
     if (!rows.length) throw new HttpError(404, "Not found");
-    return json(rows[0]);
+    return json(redact(name, user, rows[0]));
   }
   if (method === "PATCH" || method === "PUT") {
     const rows = await store.filter(scopedQuery(name, "update", user, { id }), { limit: 1 });
     if (!rows.length) throw new HttpError(404, "Not found");
-    return json(await store.update(id, await readJson(request)));
+    let patch = await readJson(request);
+    if (name === "Partner") patch = await preparePartnerUpdate(store, id, patch, url.origin);
+    return json(await store.update(id, patch));
   }
   if (method === "DELETE") {
     const rows = await store.filter(scopedQuery(name, "delete", user, { id }), { limit: 1 });
