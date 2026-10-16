@@ -46,6 +46,16 @@ Chaque partenaire a son propre tableau de bord et ne voit **que ses données** (
 - Chaque utilisateur peut **changer son mot de passe** (Profil pour les partenaires, Settings pour l'administrateur) ; les autres appareils sont alors déconnectés.
 - Connexion protégée (blocage après trop d'essais), sessions sécurisées, codes à usage unique, en-têtes de sécurité (HTTPS forcé, anti-clickjacking).
 
+## Notifications et outils d'administration
+
+- **Emails automatiques aux partenaires** (quand Resend est configuré) : « commission approuvée » et « paiement envoyé » (avec la référence). Chaque envoi se règle dans **Settings → Notifications** ; les éteindre arrête les emails.
+- **WhatsApp en un clic** : sur un paiement marqué payé, le bouton **WhatsApp** ouvre une conversation avec le partenaire, message déjà rédigé (modèle modifiable dans Settings). Il faut activer l'option dans Settings.
+- **Réinitialiser un mot de passe** (Admin → Users → *Reset password*) : un mot de passe provisoire est généré et affiché une seule fois ; la personne est déconnectée partout. Pratique tant que les emails ne sont pas configurés.
+- **Valeurs par défaut** (Settings) : pourcentage, base de calcul et fenêtre d'attribution préremplissent un nouveau partenaire.
+- **Domaine personnalisé** (Settings → *Custom link domain*) : une fois le domaine ajouté dans Cloudflare Pages (Custom domains), tous les liens et QR codes utilisent ce domaine. Laissé vide, le domaine du site est utilisé.
+- **Référence obligatoire** pour marquer un paiement comme payé ; **Select all** pour regrouper les commissions d'un partenaire.
+- Les statuts « commission », « payé » et « remboursé » d'un parrainage sont gérés uniquement par le circuit commission → paiement (plus de saisie manuelle qui fausserait les totaux).
+
 ## Ce que voit chaque partenaire (Portail)
 
 | Page | Contenu |

@@ -96,8 +96,8 @@ export default function PendingApproval({ existing, onSubmitted }) {
             <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
           )}
           <div className="space-y-2">
-            <Label>Phone</Label>
-            <Input
+            <Label htmlFor="f-phone-1">Phone</Label>
+            <Input id="f-phone-1"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+971 50 123 4567"
@@ -105,9 +105,9 @@ export default function PendingApproval({ existing, onSubmitted }) {
             />
           </div>
           <div className="space-y-2">
-            <Label>I am a…</Label>
+            <Label htmlFor="f-i-am-a-2">I am a…</Label>
             <Select value={requestedRole} onValueChange={setRequestedRole}>
-              <SelectTrigger className="h-12">
+              <SelectTrigger id="f-i-am-a-2" className="h-12">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -117,8 +117,8 @@ export default function PendingApproval({ existing, onSubmitted }) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Notes</Label>
-            <Textarea
+            <Label htmlFor="f-notes-3">Notes</Label>
+            <Textarea id="f-notes-3"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Tell us who you are (e.g. business name, partnership details)"

@@ -194,9 +194,9 @@ export default function ReferralLanding() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Service of Interest</Label>
+                  <Label htmlFor="f-service-of-interest-1">Service of Interest</Label>
                   <Select value={form.service} onValueChange={(v) => setForm({ ...form, service: v })}>
-                    <SelectTrigger className="!rounded-none">
+                    <SelectTrigger id="f-service-of-interest-1" className="!rounded-none">
                       <SelectValue placeholder="Select a service" />
                     </SelectTrigger>
                     <SelectContent>

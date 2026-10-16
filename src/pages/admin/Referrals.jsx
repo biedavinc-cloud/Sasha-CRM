@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { notifyError } from "@/lib/notify";
 import { Link } from "react-router-dom";
 import { Plus, Share2, Search, Flag } from "lucide-react";
 import { api } from "@/api/client";
@@ -14,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const empty = { partner_id: "", client_name: "", client_phone: "", client_email: "", service_id: "", service_category: "", status: "lead_created", gross_amount: "" };
 
 export default function Referrals() {
-  const { items: referrals, loading, reload } = useCollection("Referral", {}, { sort: "-created_date", limit: 200 });
+  const { items: referrals, loading, reload } = useCollection("Referral", {}, { sort: "-created_date", limit: 2000 });
   const { items: partners } = useCollection("Partner", { status: "active" }, { limit: 100, fields: ["business_name", "user_id"] });
   const { items: services } = useCollection("Service", { active: true }, { limit: 100 });
   const [open, setOpen] = useState(false);
@@ -45,7 +46,7 @@ export default function Referrals() {
         gross_amount: Number(form.gross_amount) || 0,
       });
       setOpen(false); setForm(empty); reload();
-    } catch (e) { alert(e.message); } finally { setSaving(false); }
+    } catch (e) { notifyError(e.message); } finally { setSaving(false); }
   };
 
   return (
@@ -57,7 +58,7 @@ export default function Referrals() {
           <Input placeholder="Search client or partner…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="All statuses" /></SelectTrigger>
+          <SelectTrigger aria-label="Filter by status" className="w-full sm:w-48"><SelectValue placeholder="All statuses" /></SelectTrigger>
           <SelectContent><SelectItem value="all">All statuses</SelectItem>{Object.entries(REFERRAL_STATUSES).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent>
         </Select>
       </div>
@@ -94,16 +95,16 @@ export default function Referrals() {
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>New Referral</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Partner *</Label><Select value={form.partner_id} onValueChange={(v) => set("partner_id", v)}><SelectTrigger><SelectValue placeholder="Select partner" /></SelectTrigger><SelectContent>{partners.map((p) => <SelectItem key={p.id} value={p.id}>{p.business_name}</SelectItem>)}</SelectContent></Select></div>
-            <div><Label>Client Name *</Label><Input value={form.client_name} onChange={(e) => set("client_name", e.target.value)} /></div>
+            <div><Label htmlFor="f-partner-1">Partner *</Label><Select value={form.partner_id} onValueChange={(v) => set("partner_id", v)}><SelectTrigger id="f-partner-1"><SelectValue placeholder="Select partner" /></SelectTrigger><SelectContent>{partners.map((p) => <SelectItem key={p.id} value={p.id}>{p.business_name}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label htmlFor="f-client-name-2">Client Name *</Label><Input id="f-client-name-2" value={form.client_name} onChange={(e) => set("client_name", e.target.value)} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Phone</Label><Input value={form.client_phone} onChange={(e) => set("client_phone", e.target.value)} /></div>
-              <div><Label>Email</Label><Input type="email" value={form.client_email} onChange={(e) => set("client_email", e.target.value)} /></div>
+              <div><Label htmlFor="f-phone-3">Phone</Label><Input id="f-phone-3" value={form.client_phone} onChange={(e) => set("client_phone", e.target.value)} /></div>
+              <div><Label htmlFor="f-email-4">Email</Label><Input id="f-email-4" type="email" value={form.client_email} onChange={(e) => set("client_email", e.target.value)} /></div>
             </div>
-            <div><Label>Service</Label><Select value={form.service_id} onValueChange={(v) => set("service_id", v)}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{services.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label htmlFor="f-service-5">Service</Label><Select value={form.service_id} onValueChange={(v) => set("service_id", v)}><SelectTrigger id="f-service-5"><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{services.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Status</Label><Select value={form.status} onValueChange={(v) => set("status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(REFERRAL_STATUSES).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent></Select></div>
-              <div><Label>Gross Amount</Label><Input type="number" value={form.gross_amount} onChange={(e) => set("gross_amount", e.target.value)} placeholder="AED" /></div>
+              <div><Label htmlFor="f-status-6">Status</Label><Select value={form.status} onValueChange={(v) => set("status", v)}><SelectTrigger id="f-status-6"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(REFERRAL_STATUSES).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent></Select></div>
+              <div><Label htmlFor="f-gross-amount-7">Gross Amount</Label><Input id="f-gross-amount-7" type="number" value={form.gross_amount} onChange={(e) => set("gross_amount", e.target.value)} placeholder="AED" /></div>
             </div>
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button onClick={handleCreate} disabled={saving || !form.partner_id || !form.client_name} className="bg-brand hover:bg-brand-dark">{saving ? "Saving…" : "Create"}</Button></DialogFooter>

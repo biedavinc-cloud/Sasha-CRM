@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { notifyError } from "@/lib/notify";
 import { Link } from "react-router-dom";
 import { Plus, Handshake, Search } from "lucide-react";
 import { api } from "@/api/client";
@@ -15,7 +16,19 @@ import { Textarea } from "@/components/ui/textarea";
 const empty = { business_name: "", partner_type: "hair_salon", contact_person: "", email: "", phone: "", address: "", status: "active", referral_code: "", commission_percentage: 10, commission_basis: "gross", attribution_window_days: 30, contract_notes: "" };
 
 export default function Partners() {
-  const { items: partners, loading, reload } = useCollection("Partner", {}, { sort: "-created_date", limit: 200 });
+  const { items: partners, loading, reload } = useCollection("Partner", {}, { sort: "-created_date", limit: 2000 });
+  const { items: settingsRows } = useCollection("ClinicSetting", { setting_key: "default" }, { limit: 1 });
+  const settings = settingsRows[0] || {};
+  const openNew = () => {
+    // new partners start with the defaults configured in Settings
+    setForm({
+      ...empty,
+      commission_percentage: settings.default_commission_percentage ?? empty.commission_percentage,
+      commission_basis: settings.default_commission_basis ?? empty.commission_basis,
+      attribution_window_days: settings.default_attribution_window_days ?? empty.attribution_window_days,
+    });
+    setOpen(true);
+  };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty);
   const [saving, setSaving] = useState(false);
@@ -45,7 +58,7 @@ export default function Partners() {
       setForm(empty);
       reload();
     } catch (e) {
-      alert(e.message || "Failed to create partner");
+      notifyError(e.message || "Failed to create partner");
     } finally {
       setSaving(false);
     }
@@ -59,7 +72,7 @@ export default function Partners() {
   return (
     <div>
       <PageHeader title="Partners" subtitle="Manage referral partner businesses" actions={
-        <Button onClick={() => setOpen(true)} className="bg-brand hover:bg-brand-dark"><Plus className="h-4 w-4 mr-1.5" /> New Partner</Button>
+        <Button onClick={openNew} className="bg-brand hover:bg-brand-dark"><Plus className="h-4 w-4 mr-1.5" /> New Partner</Button>
       } />
 
       <div className="relative mb-4 max-w-sm">
@@ -69,7 +82,7 @@ export default function Partners() {
 
       <Card className="overflow-hidden">
         {loading ? <Spinner /> : filtered.length === 0 ? (
-          <EmptyState icon={Handshake} title="No partners yet" description="Create your first referral partner to generate their unique referral code and link." action={<Button onClick={() => setOpen(true)} className="bg-brand hover:bg-brand-dark"><Plus className="h-4 w-4 mr-1.5" /> New Partner</Button>} />
+          <EmptyState icon={Handshake} title="No partners yet" description="Create your first referral partner to generate their unique referral code and link." action={<Button onClick={openNew} className="bg-brand hover:bg-brand-dark"><Plus className="h-4 w-4 mr-1.5" /> New Partner</Button>} />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -98,7 +111,7 @@ export default function Partners() {
                     <Td className="text-muted-foreground">{formatDate(p.created_date)}</Td>
                     <Td>
                       <Select value={p.status} onValueChange={(v) => changeStatus(p, v)}>
-                        <SelectTrigger className="h-8 w-28 text-xs border-0 bg-muted"><SelectValue /></SelectTrigger>
+                        <SelectTrigger aria-label="Partner status" className="h-8 w-28 text-xs border-0 bg-muted"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="active">Activate</SelectItem>
                           <SelectItem value="suspended">Suspend</SelectItem>
@@ -121,30 +134,30 @@ export default function Partners() {
             <DialogTitle>Create Partner</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-            <div><Label>Business Name *</Label><Input value={form.business_name} onChange={(e) => set("business_name", e.target.value)} placeholder="Beauty Lounge JVC" /></div>
-            <div><Label>Link code (optional)</Label><Input value={form.referral_code} onChange={(e) => set("referral_code", e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ""))} placeholder="Auto, e.g. BEAUTYLOUNGE" maxLength={24} /><p className="text-xs text-muted-foreground mt-1">Becomes the partner link: /r/CODE (letters, digits, hyphens; unique).</p></div>
+            <div><Label htmlFor="f-business-name-1">Business Name *</Label><Input id="f-business-name-1" value={form.business_name} onChange={(e) => set("business_name", e.target.value)} placeholder="Beauty Lounge JVC" /></div>
+            <div><Label htmlFor="f-link-code-optional-2">Link code (optional)</Label><Input id="f-link-code-optional-2" value={form.referral_code} onChange={(e) => set("referral_code", e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ""))} placeholder="Auto, e.g. BEAUTYLOUNGE" maxLength={24} /><p className="text-xs text-muted-foreground mt-1">Becomes the partner link: /r/CODE (letters, digits, hyphens; unique).</p></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Partner Type</Label>
-                <Select value={form.partner_type} onValueChange={(v) => set("partner_type", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(PARTNER_TYPES).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
+              <div><Label htmlFor="f-partner-type-3">Partner Type</Label>
+                <Select value={form.partner_type} onValueChange={(v) => set("partner_type", v)}><SelectTrigger id="f-partner-type-3"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(PARTNER_TYPES).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select>
               </div>
-              <div><Label>Status</Label>
-                <Select value={form.status} onValueChange={(v) => set("status", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(PARTNER_STATUSES).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent></Select>
+              <div><Label htmlFor="f-status-4">Status</Label>
+                <Select value={form.status} onValueChange={(v) => set("status", v)}><SelectTrigger id="f-status-4"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(PARTNER_STATUSES).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent></Select>
               </div>
             </div>
-            <div><Label>Contact Person</Label><Input value={form.contact_person} onChange={(e) => set("contact_person", e.target.value)} /></div>
+            <div><Label htmlFor="f-contact-person-5">Contact Person</Label><Input id="f-contact-person-5" value={form.contact_person} onChange={(e) => set("contact_person", e.target.value)} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Email (for portal invite)</Label><Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="partner@example.com" /></div>
-              <div><Label>Phone</Label><Input value={form.phone} onChange={(e) => set("phone", e.target.value)} /></div>
+              <div><Label htmlFor="f-email-for-portal-invite-6">Email (for portal invite)</Label><Input id="f-email-for-portal-invite-6" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="partner@example.com" /></div>
+              <div><Label htmlFor="f-phone-7">Phone</Label><Input id="f-phone-7" value={form.phone} onChange={(e) => set("phone", e.target.value)} /></div>
             </div>
-            <div><Label>Address</Label><Input value={form.address} onChange={(e) => set("address", e.target.value)} /></div>
+            <div><Label htmlFor="f-address-8">Address</Label><Input id="f-address-8" value={form.address} onChange={(e) => set("address", e.target.value)} /></div>
             <div className="grid grid-cols-3 gap-3">
-              <div><Label>Commission %</Label><Input type="number" value={form.commission_percentage} onChange={(e) => set("commission_percentage", e.target.value)} /></div>
-              <div><Label>Basis</Label>
-                <Select value={form.commission_basis} onValueChange={(v) => set("commission_basis", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="gross">Gross</SelectItem><SelectItem value="profit">Profit</SelectItem></SelectContent></Select>
+              <div><Label htmlFor="f-commission-9">Commission %</Label><Input id="f-commission-9" type="number" value={form.commission_percentage} onChange={(e) => set("commission_percentage", e.target.value)} /></div>
+              <div><Label htmlFor="f-basis-10">Basis</Label>
+                <Select value={form.commission_basis} onValueChange={(v) => set("commission_basis", v)}><SelectTrigger id="f-basis-10"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="gross">Gross</SelectItem><SelectItem value="profit">Profit</SelectItem></SelectContent></Select>
               </div>
-              <div><Label>Attribution (days)</Label><Input type="number" value={form.attribution_window_days} onChange={(e) => set("attribution_window_days", e.target.value)} /></div>
+              <div><Label htmlFor="f-attribution-days-11">Attribution (days)</Label><Input id="f-attribution-days-11" type="number" value={form.attribution_window_days} onChange={(e) => set("attribution_window_days", e.target.value)} /></div>
             </div>
-            <div><Label>Contract Notes</Label><Textarea value={form.contract_notes} onChange={(e) => set("contract_notes", e.target.value)} rows={2} /></div>
+            <div><Label htmlFor="f-contract-notes-12">Contract Notes</Label><Textarea id="f-contract-notes-12" value={form.contract_notes} onChange={(e) => set("contract_notes", e.target.value)} rows={2} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>

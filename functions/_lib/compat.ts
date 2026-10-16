@@ -13,6 +13,8 @@ export function createClientFromRequest(req: Request): any {
   if (!ctx) throw new Error("Request context missing");
   const { env, user } = ctx;
   return {
+    env,
+    origin: new URL(req.url).origin,
     auth: { me: async () => user },
     asServiceRole: {
       entities: new Proxy({}, { get: (_t, name) => entityStore(env, String(name), { actor: user }) }),

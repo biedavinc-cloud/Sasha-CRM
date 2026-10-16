@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { notifyError } from "@/lib/notify";
 import { Plus, Calendar as CalIcon } from "lucide-react";
 import { api } from "@/api/client";
 import { useCollection } from "@/hooks/crm";
@@ -14,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 const empty = { client_name: "", service_id: "", date: "", time: "", staff_name: "", partner_id: "", status: "booked", notes: "" };
 
 export default function Appointments() {
-  const { items: appts, loading, reload } = useCollection("Appointment", {}, { sort: "-date", limit: 200 });
+  const { items: appts, loading, reload } = useCollection("Appointment", {}, { sort: "-date", limit: 2000 });
   const { items: services } = useCollection("Service", { active: true }, { limit: 100 });
   const { items: partners } = useCollection("Partner", { status: "active" }, { limit: 100, fields: ["business_name"] });
   const [open, setOpen] = useState(false);
@@ -30,7 +31,7 @@ export default function Appointments() {
       const partner = partners.find((p) => p.id === form.partner_id);
       await api.entities.Appointment.create({ ...form, appointment_id: "A-" + Date.now().toString().slice(-6), service_name: svc?.name || "", partner_name: partner?.business_name || "" });
       setOpen(false); setForm(empty); reload();
-    } catch (e) { alert(e.message); } finally { setSaving(false); }
+    } catch (e) { notifyError(e.message); } finally { setSaving(false); }
   };
 
   const updateStatus = async (a, status) => { await api.entities.Appointment.update(a.id, { status }); reload(); };
@@ -57,7 +58,7 @@ export default function Appointments() {
                     <Td><StatusBadge status={a.status} map={APPOINTMENT_STATUSES} /></Td>
                     <Td>
                       <Select value={a.status} onValueChange={(v) => updateStatus(a, v)}>
-                        <SelectTrigger className="h-8 w-28 text-xs border-0 bg-muted"><SelectValue /></SelectTrigger>
+                        <SelectTrigger aria-label="Appointment status" className="h-8 w-28 text-xs border-0 bg-muted"><SelectValue /></SelectTrigger>
                         <SelectContent>{Object.entries(APPOINTMENT_STATUSES).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent>
                       </Select>
                     </Td>
@@ -73,17 +74,17 @@ export default function Appointments() {
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>New Appointment</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Client Name *</Label><Input value={form.client_name} onChange={(e) => set("client_name", e.target.value)} /></div>
+            <div><Label htmlFor="f-client-name-1">Client Name *</Label><Input id="f-client-name-1" value={form.client_name} onChange={(e) => set("client_name", e.target.value)} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Service</Label><Select value={form.service_id} onValueChange={(v) => set("service_id", v)}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{services.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
-              <div><Label>Staff</Label><Input value={form.staff_name} onChange={(e) => set("staff_name", e.target.value)} placeholder="Dr. / Specialist" /></div>
+              <div><Label htmlFor="f-service-2">Service</Label><Select value={form.service_id} onValueChange={(v) => set("service_id", v)}><SelectTrigger id="f-service-2"><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{services.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
+              <div><Label htmlFor="f-staff-3">Staff</Label><Input id="f-staff-3" value={form.staff_name} onChange={(e) => set("staff_name", e.target.value)} placeholder="Dr. / Specialist" /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Date *</Label><Input type="date" value={form.date} onChange={(e) => set("date", e.target.value)} /></div>
-              <div><Label>Time</Label><Input type="time" value={form.time} onChange={(e) => set("time", e.target.value)} /></div>
+              <div><Label htmlFor="f-date-4">Date *</Label><Input id="f-date-4" type="date" value={form.date} onChange={(e) => set("date", e.target.value)} /></div>
+              <div><Label htmlFor="f-time-5">Time</Label><Input id="f-time-5" type="time" value={form.time} onChange={(e) => set("time", e.target.value)} /></div>
             </div>
-            <div><Label>Referral Partner</Label><Select value={form.partner_id} onValueChange={(v) => set("partner_id", v)}><SelectTrigger><SelectValue placeholder="None" /></SelectTrigger><SelectContent><SelectItem value={null}>None</SelectItem>{partners.map((p) => <SelectItem key={p.id} value={p.id}>{p.business_name}</SelectItem>)}</SelectContent></Select></div>
-            <div><Label>Notes</Label><Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} /></div>
+            <div><Label htmlFor="f-referral-partner-6">Referral Partner</Label><Select value={form.partner_id} onValueChange={(v) => set("partner_id", v)}><SelectTrigger id="f-referral-partner-6"><SelectValue placeholder="None" /></SelectTrigger><SelectContent><SelectItem value={null}>None</SelectItem>{partners.map((p) => <SelectItem key={p.id} value={p.id}>{p.business_name}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label htmlFor="f-notes-7">Notes</Label><Textarea id="f-notes-7" value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} /></div>
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button onClick={handleCreate} disabled={saving || !form.client_name || !form.date} className="bg-brand hover:bg-brand-dark">{saving ? "Saving…" : "Book"}</Button></DialogFooter>
         </DialogContent>

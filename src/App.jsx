@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -16,34 +17,34 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 
 // Layouts
-import BackOfficeLayout from '@/components/crm/BackOfficeLayout';
-import PartnerLayout from '@/components/crm/PartnerLayout';
+const BackOfficeLayout = lazy(() => import('@/components/crm/BackOfficeLayout'));
+const PartnerLayout = lazy(() => import('@/components/crm/PartnerLayout'));
 
 // Back Office pages
-import AdminDashboard from '@/pages/admin/Dashboard';
-import Partners from '@/pages/admin/Partners';
-import PartnerDetail from '@/pages/admin/PartnerDetail';
-import Clients from '@/pages/admin/Clients';
-import Leads from '@/pages/admin/Leads';
-import Appointments from '@/pages/admin/Appointments';
-import Services from '@/pages/admin/Services';
-import Referrals from '@/pages/admin/Referrals';
-import ReferralDetail from '@/pages/admin/ReferralDetail';
-import Commissions from '@/pages/admin/Commissions';
-import Payouts from '@/pages/admin/Payouts';
-import Reports from '@/pages/admin/Reports';
-import Users from '@/pages/admin/Users';
-import Settings from '@/pages/admin/Settings';
-import AuditLogs from '@/pages/admin/AuditLogs';
-import GitHubPage from '@/pages/admin/GitHub';
+const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
+const Partners = lazy(() => import('@/pages/admin/Partners'));
+const PartnerDetail = lazy(() => import('@/pages/admin/PartnerDetail'));
+const Clients = lazy(() => import('@/pages/admin/Clients'));
+const Leads = lazy(() => import('@/pages/admin/Leads'));
+const Appointments = lazy(() => import('@/pages/admin/Appointments'));
+const Services = lazy(() => import('@/pages/admin/Services'));
+const Referrals = lazy(() => import('@/pages/admin/Referrals'));
+const ReferralDetail = lazy(() => import('@/pages/admin/ReferralDetail'));
+const Commissions = lazy(() => import('@/pages/admin/Commissions'));
+const Payouts = lazy(() => import('@/pages/admin/Payouts'));
+const Reports = lazy(() => import('@/pages/admin/Reports'));
+const Users = lazy(() => import('@/pages/admin/Users'));
+const Settings = lazy(() => import('@/pages/admin/Settings'));
+const AuditLogs = lazy(() => import('@/pages/admin/AuditLogs'));
+const GitHubPage = lazy(() => import('@/pages/admin/GitHub'));
 
 // Partner Portal pages
-import PartnerDashboard from '@/pages/portal/Dashboard';
-import MyReferrals from '@/pages/portal/MyReferrals';
-import MyCommissions from '@/pages/portal/MyCommissions';
-import MyPayouts from '@/pages/portal/MyPayouts';
-import ReferralLink from '@/pages/portal/ReferralLink';
-import Profile from '@/pages/portal/Profile';
+const PartnerDashboard = lazy(() => import('@/pages/portal/Dashboard'));
+const MyReferrals = lazy(() => import('@/pages/portal/MyReferrals'));
+const MyCommissions = lazy(() => import('@/pages/portal/MyCommissions'));
+const MyPayouts = lazy(() => import('@/pages/portal/MyPayouts'));
+const ReferralLink = lazy(() => import('@/pages/portal/ReferralLink'));
+const Profile = lazy(() => import('@/pages/portal/Profile'));
 
 // Public pages
 import ReferralLanding from '@/pages/public/ReferralLanding';
@@ -70,6 +71,7 @@ const AuthenticatedApp = () => {
 
   return (
     <ApprovalGate>
+    <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center"><div className="w-8 h-8 border-4 border-brand-soft border-t-brand rounded-full animate-spin"></div></div>}>
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
@@ -111,6 +113,7 @@ const AuthenticatedApp = () => {
 
       <Route path="*" element={<PageNotFound />} />
     </Routes>
+    </Suspense>
     </ApprovalGate>
   );
 };

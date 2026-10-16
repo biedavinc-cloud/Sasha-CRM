@@ -3,7 +3,7 @@
 //   POST  /api/users/invite       { email, role } -> create (or find) the user and email a set-password link.
 //                                 Partners/staff still go through the access-request approval, as the Users screen states.
 import { HttpError, json, readJson, normalizeEmail, uid, nowIso } from "../../_lib/util.js";
-import { requireUser, requireAdmin, publicUser } from "../../_lib/auth.js";
+import { requireUser, requireAdmin, publicUser, hashPassword, destroyAllSessions } from "../../_lib/auth.js";
 import { issueLink } from "../../_lib/flows.js";
 
 const ROLES = ["admin", "user"];
@@ -35,6 +35,20 @@ export async function onRequest({ request, env, params }) {
     // Only send a set-password link if the person has no password yet.
     if (!user.password_hash) await issueLink(env, request, user, "invite");
     return json({ id: user.id, email, role: user.role }, 201);
+  }
+
+  if (a && request.method === "POST" && Array.isArray(params.path) && params.path[1] === "reset-password") {
+    const target = await env.DB.prepare("SELECT id, email FROM users WHERE id = ?").bind(a).first();
+    if (!target) throw new HttpError(404, "User not found");
+    if (target.id === me.id) throw new HttpError(400, "Use Change password for your own account");
+    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    const raw = Array.from(bytes, (b) => alphabet[b % alphabet.length]);
+    const temporaryPassword = [raw.slice(0, 4), raw.slice(4, 8), raw.slice(8, 12), raw.slice(12, 16)].map((g) => g.join("")).join("-");
+    await env.DB.prepare("UPDATE users SET password_hash = ?, email_verified = 1, updated_date = ? WHERE id = ?")
+      .bind(await hashPassword(temporaryPassword, env), nowIso(), a).run();
+    await destroyAllSessions(env, a); // they are signed out everywhere and must use the new password
+    return json({ ok: true, email: target.email, temporaryPassword });
   }
 
   if (a && request.method === "PATCH") {

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { notifyError } from "@/lib/notify";
 import { useOutletContext } from "react-router-dom";
 import { Save, Check } from "lucide-react";
 import { api } from "@/api/client";
@@ -22,7 +23,7 @@ export default function Profile() {
       const res = await api.functions.invoke('updatePartnerProfile', form);
       if (res.data?.error) throw new Error(res.data.error);
       setSaved(true); setTimeout(() => setSaved(false), 2500);
-    } catch (e) { alert(e.message); } finally { setSaving(false); }
+    } catch (e) { notifyError(e.message); } finally { setSaving(false); }
   };
 
   return (
@@ -45,9 +46,9 @@ export default function Profile() {
         <Card className="p-6">
           <h3 className="text-sm font-semibold mb-4">Editable Information</h3>
           <div className="space-y-3">
-            <div><Label>Contact Person</Label><Input value={form.contact_person} onChange={(e) => set("contact_person", e.target.value)} /></div>
-            <div><Label>Phone</Label><Input value={form.phone} onChange={(e) => set("phone", e.target.value)} /></div>
-            <div><Label>Address</Label><Input value={form.address} onChange={(e) => set("address", e.target.value)} /></div>
+            <div><Label htmlFor="f-contact-person-1">Contact Person</Label><Input id="f-contact-person-1" value={form.contact_person} onChange={(e) => set("contact_person", e.target.value)} /></div>
+            <div><Label htmlFor="f-phone-2">Phone</Label><Input id="f-phone-2" value={form.phone} onChange={(e) => set("phone", e.target.value)} /></div>
+            <div><Label htmlFor="f-address-3">Address</Label><Input id="f-address-3" value={form.address} onChange={(e) => set("address", e.target.value)} /></div>
             <Button onClick={save} disabled={saving} className="bg-brand hover:bg-brand-dark">{saved ? <Check className="h-4 w-4 mr-1.5" /> : <Save className="h-4 w-4 mr-1.5" />}{saving ? "Saving…" : saved ? "Saved" : "Save Changes"}</Button>
           </div>
         </Card>

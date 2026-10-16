@@ -10,6 +10,7 @@ import { HttpError, json, readJson } from "../../_lib/util.js";
 import { requireUser } from "../../_lib/auth.js";
 import { entityStore, hasEntity } from "../../_lib/db.js";
 import { scopedQuery, assertCanCreate, redact, assertVisibleFields } from "../../_lib/rls.js";
+import { notifyPayoutPaid } from "../../_lib/notify.js";
 import { preparePartnerCreate, preparePartnerUpdate } from "../../_lib/partners.js";
 
 const parseQ = (url) => {
@@ -95,8 +96,14 @@ export async function onRequest({ request, env, params }) {
     const rows = await store.filter(scopedQuery(name, "update", user, { id }), { limit: 1 });
     if (!rows.length) throw new HttpError(404, "Not found");
     let patch = await readJson(request);
+    if (name === "Referral" && ["commission_pending", "commission_approved", "commission_payable", "paid", "refunded"].includes(patch.status)) {
+      throw new HttpError(400, "This status is set automatically by the commission and payout flow");
+    }
     if (name === "Partner") patch = await preparePartnerUpdate(store, id, patch, url.origin);
-    return json(await store.update(id, patch));
+    const before = rows[0];
+    const updated = await store.update(id, patch);
+    if (name === "Payout" && updated.status === "paid" && before.status !== "paid") await notifyPayoutPaid(env, url.origin, updated);
+    return json(updated);
   }
   if (method === "DELETE") {
     const rows = await store.filter(scopedQuery(name, "delete", user, { id }), { limit: 1 });

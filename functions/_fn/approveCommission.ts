@@ -1,5 +1,6 @@
 import { createClientFromRequest } from '../_lib/compat.ts';
 import { logAudit } from './shared/audit.ts';
+import { notifyCommissionApproved } from '../_lib/notify.js';
 
 export default async function(req: Request): Promise<Response> {
   try {
@@ -49,6 +50,8 @@ export default async function(req: Request): Promise<Response> {
       newValue: { status: newStatus, notes },
       details: `Commission ${action} by ${user.email}`,
     });
+
+    if (action === 'approve') await notifyCommissionApproved(base44.env, base44.origin, commission);
 
     return Response.json({ ok: true, status: newStatus });
   } catch (error) {

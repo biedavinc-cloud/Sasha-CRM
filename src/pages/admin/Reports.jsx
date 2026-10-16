@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Reports() {
-  const { items: commissions, loading: lc } = useCollection("Commission", {}, { sort: "-created_date", limit: 500 });
-  const { items: payouts, loading: lp } = useCollection("Payout", {}, { sort: "-created_date", limit: 500 });
-  const { items: referrals, loading: lr } = useCollection("Referral", {}, { sort: "-created_date", limit: 500 });
+  const { items: commissions, loading: lc } = useCollection("Commission", {}, { sort: "-created_date", limit: 2000 });
+  const { items: payouts, loading: lp } = useCollection("Payout", {}, { sort: "-created_date", limit: 2000 });
+  const { items: referrals, loading: lr } = useCollection("Referral", {}, { sort: "-created_date", limit: 2000 });
   const partnerPerf = useAggregate("Referral", { groupBy: "partner_name", count: true, sum: "gross_amount", sort: "-count", limit: 100 });
   const servicePerf = useAggregate("Referral", { groupBy: "service_name", count: true, sum: "gross_amount", sort: "-sum_gross_amount", limit: 100 });
 
@@ -76,7 +76,7 @@ export default function Reports() {
               <thead className="bg-muted/50"><tr><Th>Partner</Th><Th>Service</Th><Th className="text-right">Amount</Th><Th>Status</Th><Th>Date</Th></tr></thead>
               <tbody className="divide-y divide-border">
                 {commissions.map((c) => (
-                  <tr key={c.id} className="hover:bg-muted/30"><Td className="font-medium">{c.partner_name}</Td><Td className="text-muted-foreground">{c.service_name}</Td><Td className="text-right">{formatAED(c.commission_amount)}</Td><Td><StatusBadge status={c.status} map={COMMISSION_STATUSES} /></Td><Td className="text-muted-foreground">{formatDate(c.created_date)}</Td></tr>
+                  <tr key={c.id} className="hover:bg-muted/30"><Td className="font-medium">{c.partner_name}</Td><Td className="text-muted-foreground">{c.client_name || c.service_name}</Td><Td className="text-right">{formatAED(c.commission_amount)}</Td><Td><StatusBadge status={c.status} map={COMMISSION_STATUSES} /></Td><Td className="text-muted-foreground">{formatDate(c.created_date)}</Td></tr>
                 ))}
               </tbody>
             </table>

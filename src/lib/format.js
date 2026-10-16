@@ -106,5 +106,7 @@ export const TONE_CLASSES = {
 };
 // Referral links are built from the current site address + the partner's code, so they stay correct if the domain changes
 // (pages.dev -> custom domain). The stored referral_link is only a fallback.
+let referralBase = null; // set from Settings -> "Referral Link Base URL" (e.g. https://join.yourdomain.com)
+export const setReferralBase = (url) => { referralBase = url || null; };
 export const referralLinkOf = (partner) =>
-  partner && partner.referral_code ? `${window.location.origin}/r/${partner.referral_code}` : (partner && partner.referral_link) || "";
+  partner && partner.referral_code ? `${referralBase || window.location.origin}/r/${partner.referral_code}` : (partner && partner.referral_link) || "";

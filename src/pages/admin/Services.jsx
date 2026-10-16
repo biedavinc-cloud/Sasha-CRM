@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { notifyError } from "@/lib/notify";
 import { Plus, Sparkles, Pencil } from "lucide-react";
 import { api } from "@/api/client";
 import { useCollection } from "@/hooks/crm";
@@ -16,7 +17,7 @@ const CATS = ["PRP Hair", "PRF Face", "HydraFacial", "Laser Hair Removal", "Othe
 const empty = { name: "", category: "PRP Hair", price: "", description: "", active: true, commission_eligible: true };
 
 export default function Services() {
-  const { items: services, loading, reload } = useCollection("Service", {}, { sort: "category", limit: 200 });
+  const { items: services, loading, reload } = useCollection("Service", {}, { sort: "category", limit: 2000 });
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(empty);
@@ -34,7 +35,7 @@ export default function Services() {
       if (editId) await api.entities.Service.update(editId, payload);
       else await api.entities.Service.create(payload);
       setOpen(false); reload();
-    } catch (e) { alert(e.message); } finally { setSaving(false); }
+    } catch (e) { notifyError(e.message); } finally { setSaving(false); }
   };
 
   return (
@@ -68,12 +69,12 @@ export default function Services() {
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>{editId ? "Edit Service" : "New Service"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Name *</Label><Input value={form.name} onChange={(e) => set("name", e.target.value)} /></div>
-            <div><Label>Category</Label><Select value={form.category} onValueChange={(v) => set("category", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{CATS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
-            <div><Label>Price (AED)</Label><Input type="number" value={form.price} onChange={(e) => set("price", e.target.value)} /></div>
-            <div><Label>Description</Label><Textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={2} /></div>
-            <div className="flex items-center justify-between"><Label>Commission Eligible</Label><Switch checked={form.commission_eligible} onCheckedChange={(v) => set("commission_eligible", v)} /></div>
-            <div className="flex items-center justify-between"><Label>Active</Label><Switch checked={form.active} onCheckedChange={(v) => set("active", v)} /></div>
+            <div><Label htmlFor="f-name-1">Name *</Label><Input id="f-name-1" value={form.name} onChange={(e) => set("name", e.target.value)} /></div>
+            <div><Label htmlFor="f-category-2">Category</Label><Select value={form.category} onValueChange={(v) => set("category", v)}><SelectTrigger id="f-category-2"><SelectValue /></SelectTrigger><SelectContent>{CATS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label htmlFor="f-price-aed-3">Price (AED)</Label><Input id="f-price-aed-3" type="number" value={form.price} onChange={(e) => set("price", e.target.value)} /></div>
+            <div><Label htmlFor="f-description-4">Description</Label><Textarea id="f-description-4" value={form.description} onChange={(e) => set("description", e.target.value)} rows={2} /></div>
+            <div className="flex items-center justify-between"><Label htmlFor="f-commission-eligible-5">Commission Eligible</Label><Switch id="f-commission-eligible-5" checked={form.commission_eligible} onCheckedChange={(v) => set("commission_eligible", v)} /></div>
+            <div className="flex items-center justify-between"><Label htmlFor="f-active-6">Active</Label><Switch id="f-active-6" checked={form.active} onCheckedChange={(v) => set("active", v)} /></div>
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button onClick={handleSave} disabled={saving || !form.name} className="bg-brand hover:bg-brand-dark">{saving ? "Saving…" : "Save"}</Button></DialogFooter>
         </DialogContent>

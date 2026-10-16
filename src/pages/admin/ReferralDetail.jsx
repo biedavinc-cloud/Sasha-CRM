@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { notifyError } from "@/lib/notify";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Flag, Calculator, Check } from "lucide-react";
 import { api } from "@/api/client";
@@ -10,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+const AUTOMATIC = ["commission_pending", "commission_approved", "commission_payable", "paid", "refunded"]; // set by the commission / payout flow, never by hand
 const FLOW = ["clicked", "lead_created", "contacted", "appointment_booked", "appointment_completed", "treatment_completed", "satisfaction_confirmed", "commission_pending", "commission_payable", "paid"];
 
 export default function ReferralDetail() {
@@ -34,10 +36,12 @@ export default function ReferralDetail() {
       setRecord({ ...referral, status: "commission_pending", gross_amount: res.data?.commission?.gross_amount ?? referral.gross_amount, commission_id: res.data?.commission?.id });
       setDone(true);
       setTimeout(() => setDone(false), 2500);
-    } catch (e) { alert(e.response?.data?.error || e.message); } finally { setProcessing(false); }
+    } catch (e) { notifyError(e.response?.data?.error || e.message); } finally { setProcessing(false); }
   };
 
-  const advanceStatus = async (status) => { const updated = await api.entities.Referral.update(id, { status }); setRecord(updated); };
+  const advanceStatus = async (status) => {
+    try { const updated = await api.entities.Referral.update(id, { status }); setRecord(updated); } catch (e) { notifyError(e); }
+  };
 
   return (
     <div>
@@ -88,8 +92,8 @@ export default function ReferralDetail() {
             <div className="space-y-3 border-t border-border pt-3">
               <p className="text-xs text-muted-foreground">Enter the treatment amount to calculate commission based on the partner's contract.</p>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>Gross (AED)</Label><Input type="number" value={gross} onChange={(e) => setGross(e.target.value)} placeholder={referral.gross_amount || "1000"} /></div>
-                <div><Label>Eligible / Profit</Label><Input type="number" value={eligible} onChange={(e) => setEligible(e.target.value)} placeholder="For profit basis" /></div>
+                <div><Label htmlFor="f-gross-aed-1">Gross (AED)</Label><Input id="f-gross-aed-1" type="number" value={gross} onChange={(e) => setGross(e.target.value)} placeholder={referral.gross_amount || "1000"} /></div>
+                <div><Label htmlFor="f-eligible-profit-2">Eligible / Profit</Label><Input id="f-eligible-profit-2" type="number" value={eligible} onChange={(e) => setEligible(e.target.value)} placeholder="For profit basis" /></div>
               </div>
               <Button onClick={processCommission} disabled={processing} className="bg-brand hover:bg-brand-dark w-full"><Calculator className="h-4 w-4 mr-1.5" />{processing ? "Processing…" : done ? "Commission Created" : "Process Commission"}</Button>
             </div>
@@ -99,8 +103,8 @@ export default function ReferralDetail() {
             <div className="border-t border-border pt-3">
               <p className="text-xs text-muted-foreground mb-2">Advance the referral status once the client journey progresses:</p>
               <Select value={referral.status} onValueChange={advanceStatus}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{Object.entries(REFERRAL_STATUSES).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent>
+                <SelectTrigger aria-label="Referral status"><SelectValue /></SelectTrigger>
+                <SelectContent>{Object.entries(REFERRAL_STATUSES).filter(([k]) => !AUTOMATIC.includes(k) || k === referral.status).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
           )}

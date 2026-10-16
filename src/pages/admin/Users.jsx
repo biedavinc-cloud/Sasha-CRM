@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { notifyError } from "@/lib/notify";
 import { UserCog, UserPlus, Shield, Handshake, Clock } from "lucide-react";
 import { api } from "@/api/client";
 import { PageHeader, Card, Spinner, Th, Td, EmptyState } from "@/components/crm/ui";
@@ -15,6 +16,16 @@ export default function Users() {
   const [users, setUsers] = useState([]);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { user: me } = useAuth();
+  const [resetFor, setResetFor] = useState(null);
+  const [resetResult, setResetResult] = useState(null);
+  const [resetting, setResetting] = useState(false);
+  const [copiedPw, setCopiedPw] = useState(false);
+  const closeReset = () => { setResetFor(null); setResetResult(null); setCopiedPw(false); };
+  const doReset = async () => {
+    setResetting(true);
+    try { setResetResult(await api.users.resetPassword(resetFor.id)); } catch (e) { notifyError(e); setResetFor(null); } finally { setResetting(false); }
+  };
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("user");
@@ -51,7 +62,7 @@ export default function Users() {
       setRole("user");
       load();
     } catch (e) {
-      alert(e.message);
+      notifyError(e.message);
     } finally {
       setSaving(false);
     }
@@ -71,7 +82,7 @@ export default function Users() {
       });
       load();
     } catch (e) {
-      alert(e.message);
+      notifyError(e.message);
     } finally {
       setActionLoading(null);
     }
@@ -88,7 +99,7 @@ export default function Users() {
       });
       load();
     } catch (e) {
-      alert(e.message);
+      notifyError(e.message);
     } finally {
       setActionLoading(null);
     }
@@ -198,6 +209,7 @@ export default function Users() {
                   <Th>Email</Th>
                   <Th>Role</Th>
                   <Th>Joined</Th>
+                  <Th></Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -217,6 +229,7 @@ export default function Users() {
                       )}
                     </Td>
                     <Td className="text-muted-foreground">{formatDate(u.created_date)}</Td>
+                    <Td>{u.id !== me?.id && <Button variant="outline" size="sm" onClick={() => setResetFor(u)}>Reset password</Button>}</Td>
                   </tr>
                 ))}
               </tbody>
@@ -232,8 +245,8 @@ export default function Users() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>Email</Label>
-              <Input
+              <Label htmlFor="f-email-1">Email</Label>
+              <Input id="f-email-1"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -241,9 +254,9 @@ export default function Users() {
               />
             </div>
             <div>
-              <Label>Role</Label>
+              <Label htmlFor="f-role-2">Role</Label>
               <Select value={role} onValueChange={setRole}>
-                <SelectTrigger>
+                <SelectTrigger id="f-role-2">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -268,6 +281,31 @@ export default function Users() {
               {saving ? "Inviting…" : "Send Invite"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!resetFor} onOpenChange={(o) => !o && closeReset()}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Reset password</DialogTitle></DialogHeader>
+          {!resetResult ? (
+            <>
+              <p className="text-sm text-muted-foreground">Create a new temporary password for <span className="font-medium text-foreground">{resetFor?.email}</span>? They will be signed out of every device.</p>
+              <DialogFooter>
+                <Button variant="outline" onClick={closeReset}>Cancel</Button>
+                <Button onClick={doReset} disabled={resetting} className="bg-brand hover:bg-brand-dark">{resetting ? "Working…" : "Generate password"}</Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">Temporary password for <span className="font-medium text-foreground">{resetResult.email}</span> (shown only once):</p>
+              <code data-testid="temp-password" className="block bg-muted px-4 py-3 rounded-xl text-base font-semibold tracking-wide text-center select-all">{resetResult.temporaryPassword}</code>
+              <p className="text-xs text-muted-foreground">Share it privately. They can change it in their profile after signing in.</p>
+              <DialogFooter>
+                <Button variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(resetResult.temporaryPassword); } catch { /* ignore */ } setCopiedPw(true); }}>{copiedPw ? "Copied" : "Copy"}</Button>
+                <Button onClick={closeReset} className="bg-brand hover:bg-brand-dark">Done</Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

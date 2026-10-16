@@ -1,6 +1,22 @@
 import { useState, useEffect, useCallback } from "react";
 import { api } from "@/api/client";
 
+const PAGE = 500;
+// A large `limit` is fetched in pages so lists never silently stop at the server's per-request maximum.
+async function fetchPaged(entityName, query, options) {
+  const wanted = options.limit ?? 100;
+  const entity = api.entities[entityName];
+  if (wanted <= PAGE) return (await entity.filter(query, options)).items || [];
+  const out = [];
+  while (out.length < wanted) {
+    const size = Math.min(PAGE, wanted - out.length);
+    const batch = (await entity.filter(query, { ...options, limit: size, skip: out.length })).items || [];
+    out.push(...batch);
+    if (batch.length < size) break;
+  }
+  return out;
+}
+
 export function useCollection(entityName, query, options) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,8 +28,7 @@ export function useCollection(entityName, query, options) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.entities[entityName].filter(query || {}, options || { limit: 100 });
-      setItems(res.items || []);
+      setItems(await fetchPaged(entityName, query || {}, options || { limit: 100 }));
       setError(null);
     } catch (e) {
       setError(e);

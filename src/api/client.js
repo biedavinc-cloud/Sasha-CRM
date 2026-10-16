@@ -91,7 +91,11 @@ export const api = {
     },
   },
   entities: new Proxy({}, { get: (_t, name) => (name === "User" ? userEntity : entity(String(name))) }),
-  users: { inviteUser: (email, role = "user") => post("/users/invite", { email, role }) },
+  users: {
+    inviteUser: (email, role = "user") => post("/users/invite", { email, role }),
+    resetPassword: (id) => post(`/users/${enc(id)}/reset-password`),
+  },
+  config: () => request("GET", "/config"),
   functions: {
     async invoke(name, body = {}) {
       const data = await post(`/fn/${enc(name)}`, body);

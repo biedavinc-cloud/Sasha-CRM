@@ -6,7 +6,7 @@ import { formatDateTime } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 
 export default function AuditLogs() {
-  const { items: logs, loading } = useCollection("AuditLog", {}, { sort: "-created_date", limit: 200 });
+  const { items: logs, loading } = useCollection("AuditLog", {}, { sort: "-created_date", limit: 2000 });
   const [search, setSearch] = useState("");
   const filtered = logs.filter((l) => (l.action || "").toLowerCase().includes(search.toLowerCase()) || (l.entity || "").toLowerCase().includes(search.toLowerCase()) || (l.details || "").toLowerCase().includes(search.toLowerCase()));
 

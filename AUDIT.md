@@ -87,3 +87,22 @@ Tests : 125 vérifications API + 42 tests d'interface (rendu réel de l'applicat
 | 29 | Liens peu « professionnels » : pas de prévisualisation sociale, pas de QR code, pas de liens par canal, partenaire créé « Pending » par défaut (lien inactif). | Ajoutés / corrigé. |
 | 30 | Total « commission » du tableau de bord admin incluait rejetées et remboursées. | Corrigé. |
 | 31 | Création d'un partenaire sans email échouait (champ vide traité comme absent). | Corrigé. |
+
+## Mise à jour — 5ᵉ série (audit des écrans d'administration, accessibilité, performance)
+Tests : 144 vérifications API + 59 tests d'interface (dont 9 contrôles d'accessibilité automatiques).
+
+| # | Constat | Statut |
+|---|---|---|
+| 32 | Les écrans de commissions affichaient une colonne « Service » **toujours vide** (la commission ne mémorisait ni client ni service) ; la recherche portait sur ce champ inexistant. | Corrigé : la commission mémorise le client et le service ; colonne « Client ». |
+| 33 | Les listes s'arrêtaient **silencieusement à 200 lignes** (parrainages, commissions, paiements, clients…), donc recherches et totaux incomplets dès que l'activité grandit. | Corrigé : chargement par pages jusqu'à 2 000 lignes par écran. |
+| 34 | Réglages « Notifications » (email commission / paiement) **sans aucun effet**. | Implémentés (emails aux partenaires) ; WhatsApp en un clic pour les paiements. |
+| 35 | Le réglage « Referral Link Base URL » pointait par défaut vers un domaine inventé (`sasha.ae`) et n'était jamais utilisé. | Vide par défaut ; une fois renseigné, il pilote tous les liens/QR. |
+| 36 | Statut d'un parrainage modifiable à la main vers « paid / commission_payable / refunded » (incohérences avec les paiements). | Interdit côté serveur et retiré de l'écran. |
+| 37 | Valeurs par défaut des Settings (pourcentage, base, fenêtre) ignorées à la création d'un partenaire. | Appliquées. |
+| 38 | Marquer un paiement comme payé sans référence. | Référence obligatoire. |
+| 39 | 16 messages d'erreur bruts du navigateur (`alert`). | Remplacés par des notifications. |
+| 40 | **Accessibilité** : 78 champs de formulaire non reliés à leur libellé, boutons sans nom (menu mobile, déconnexion, filtres, interrupteurs). | Corrigé ; contrôle automatique (axe) sur les écrans clés, 0 violation grave. |
+| 41 | **Performance** : tout le site (back-office, graphiques) était dans un seul fichier de 890 Ko téléchargé par chaque visiteur, y compris les clients sur la page de parrainage. | Chargement à la demande : fichier d'entrée 216 Ko (≈ 67 Ko compressé). |
+| 42 | Pas de moyen pour l'admin de dépanner un mot de passe sans email. | Réinitialisation avec mot de passe provisoire à usage unique. |
+
+Limites inchangées : pas de test dans un vrai navigateur (jsdom ≠ Chrome), ni Google OAuth, ni envoi réel d'emails (nécessite Resend).

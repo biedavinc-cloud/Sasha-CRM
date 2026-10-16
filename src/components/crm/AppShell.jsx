@@ -48,7 +48,7 @@ export default function AppShell({ brand, subtitle, navItems, children, accentNo
             <p className="text-xs font-medium truncate">{user?.full_name || user?.email}</p>
             <p className="text-[11px] text-muted-foreground truncate">{user?.email}</p>
           </div>
-          <button onClick={() => logout()} className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-sidebar-accent transition-colors" title="Sign out">
+          <button aria-label="Sign out" onClick={() => logout()} className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-sidebar-accent transition-colors" title="Sign out">
             <LogOut className="h-4 w-4" />
           </button>
         </div>
@@ -71,7 +71,7 @@ export default function AppShell({ brand, subtitle, navItems, children, accentNo
 
       <div className="lg:pl-64">
         <header className="sticky top-0 z-30 flex items-center gap-3 px-4 sm:px-6 h-14 bg-background/80 backdrop-blur border-b border-border">
-          <button className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-muted" onClick={() => setOpen(true)}>
+          <button aria-label="Open menu" className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-muted" onClick={() => setOpen(true)}>
             <Menu className="h-5 w-5" />
           </button>
           <p className="text-sm text-muted-foreground hidden sm:block">{subtitle}</p>

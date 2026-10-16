@@ -174,7 +174,7 @@ export const ENTITIES = {
     "defaults": {
       "setting_key": "default",
       "clinic_name": "Sasha Aesthetic Clinic",
-      "referral_base_url": "https://sasha.ae/r/",
+      "referral_base_url": "",
       "default_attribution_window_days": 30,
       "default_commission_percentage": 10,
       "default_commission_basis": "gross",

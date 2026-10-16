@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { notifyError } from "@/lib/notify";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Save, Copy, Check, Wallet, TrendingUp } from "lucide-react";
 import { api } from "@/api/client";
@@ -46,7 +47,7 @@ export default function PartnerDetail() {
       const updated = await api.entities.Partner.update(id, { ...form, commission_percentage: Number(form.commission_percentage), min_transaction_amount: form.min_transaction_amount ? Number(form.min_transaction_amount) : null, max_commission: form.max_commission ? Number(form.max_commission) : null, attribution_window_days: Number(form.attribution_window_days) || 30 });
       setRecord(updated);
       setEditing(false);
-    } catch (e) { alert(e.message); } finally { setSaving(false); }
+    } catch (e) { notifyError(e.message); } finally { setSaving(false); }
   };
 
   const copyLink = () => { navigator.clipboard.writeText(referralLinkOf(partner)); setCopied(true); setTimeout(() => setCopied(false), 2000); };
@@ -100,16 +101,16 @@ export default function PartnerDetail() {
             {editing ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div><Label>Commission %</Label><Input type="number" value={form.commission_percentage} onChange={(e) => set("commission_percentage", e.target.value)} /></div>
-                  <div><Label>Basis</Label><Select value={form.commission_basis} onValueChange={(v) => set("commission_basis", v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="gross">Gross Amount</SelectItem><SelectItem value="profit">Profit</SelectItem></SelectContent></Select></div>
-                  <div><Label>Min Transaction</Label><Input type="number" value={form.min_transaction_amount || ""} onChange={(e) => set("min_transaction_amount", e.target.value)} placeholder="0" /></div>
-                  <div><Label>Max Commission</Label><Input type="number" value={form.max_commission || ""} onChange={(e) => set("max_commission", e.target.value)} placeholder="None" /></div>
+                  <div><Label htmlFor="f-commission-1">Commission %</Label><Input id="f-commission-1" type="number" value={form.commission_percentage} onChange={(e) => set("commission_percentage", e.target.value)} /></div>
+                  <div><Label htmlFor="f-basis-2">Basis</Label><Select value={form.commission_basis} onValueChange={(v) => set("commission_basis", v)}><SelectTrigger id="f-basis-2"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="gross">Gross Amount</SelectItem><SelectItem value="profit">Profit</SelectItem></SelectContent></Select></div>
+                  <div><Label htmlFor="f-min-transaction-3">Min Transaction</Label><Input id="f-min-transaction-3" type="number" value={form.min_transaction_amount || ""} onChange={(e) => set("min_transaction_amount", e.target.value)} placeholder="0" /></div>
+                  <div><Label htmlFor="f-max-commission-4">Max Commission</Label><Input id="f-max-commission-4" type="number" value={form.max_commission || ""} onChange={(e) => set("max_commission", e.target.value)} placeholder="None" /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Effective Date</Label><Input type="date" value={form.effective_date || ""} onChange={(e) => set("effective_date", e.target.value)} /></div>
-                  <div><Label>Expiry Date</Label><Input type="date" value={form.expiry_date || ""} onChange={(e) => set("expiry_date", e.target.value)} /></div>
+                  <div><Label htmlFor="f-effective-date-5">Effective Date</Label><Input id="f-effective-date-5" type="date" value={form.effective_date || ""} onChange={(e) => set("effective_date", e.target.value)} /></div>
+                  <div><Label htmlFor="f-expiry-date-6">Expiry Date</Label><Input id="f-expiry-date-6" type="date" value={form.expiry_date || ""} onChange={(e) => set("expiry_date", e.target.value)} /></div>
                 </div>
-                <div><Label>Attribution Window (days)</Label><Input type="number" value={form.attribution_window_days} onChange={(e) => set("attribution_window_days", e.target.value)} /></div>
+                <div><Label htmlFor="f-attribution-window-days-7">Attribution Window (days)</Label><Input id="f-attribution-window-days-7" type="number" value={form.attribution_window_days} onChange={(e) => set("attribution_window_days", e.target.value)} /></div>
                 <div>
                   <Label>Eligible Services (empty = all eligible)</Label>
                   <div className="grid grid-cols-2 gap-2 mt-2">
@@ -121,7 +122,7 @@ export default function PartnerDetail() {
                     ))}
                   </div>
                 </div>
-                <div><Label>Contract Notes</Label><Textarea value={form.contract_notes || ""} onChange={(e) => set("contract_notes", e.target.value)} rows={2} /></div>
+                <div><Label htmlFor="f-contract-notes-9">Contract Notes</Label><Textarea id="f-contract-notes-9" value={form.contract_notes || ""} onChange={(e) => set("contract_notes", e.target.value)} rows={2} /></div>
                 <div className="flex gap-2"><Button onClick={saveConfig} disabled={saving} className="bg-brand hover:bg-brand-dark"><Save className="h-4 w-4 mr-1.5" />{saving ? "Saving…" : "Save Config"}</Button><Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button></div>
               </div>
             ) : (
@@ -201,7 +202,7 @@ function CommissionTable({ commissions }) {
         <tbody className="divide-y divide-border">
           {commissions.map((c) => (
             <tr key={c.id} className="hover:bg-muted/30">
-              <Td className="font-medium">{c.service_name || "—"}</Td><Td className="capitalize">{c.basis}</Td>
+              <Td className="font-medium">{c.client_name || c.service_name || "—"}</Td><Td className="capitalize">{c.basis}</Td>
               <Td className="text-right">{formatAED(c.eligible_amount)}</Td><Td className="text-right">{c.commission_rate}%</Td>
               <Td className="text-right font-medium">{formatAED(c.commission_amount)}</Td>
               <Td><StatusBadge status={c.status} map={COMMISSION_STATUSES} /></Td>

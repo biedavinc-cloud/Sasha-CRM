@@ -351,6 +351,74 @@ async function registerAndVerify(c, email, password) {
   ok((await new Client().post("/api/auth/login", { email: cpEmail, password: pw })).status === 401, "old password no longer works");
   ok((await new Client().post("/api/auth/login", { email: cpEmail, password: "Another-Pass1!" })).status === 200, "new password works");
 
+  console.log("\n== Operations: status guard, client names, notifications, config, admin reset ==");
+  const newRef = async (name, phone) => (await anon.post("/api/fn/captureReferral", { referralCode: `ONE${run}`, clientName: name, clientPhone: phone })).data.referralId;
+  const rg = await newRef("Status Guard", "+971 55 000 3333");
+  r = await admin.patch(`/api/entities/Referral/${rg}`, { status: "paid" });
+  ok(r.status === 400, "referral cannot be set to 'paid' by hand");
+  r = await admin.patch(`/api/entities/Referral/${rg}`, { status: "commission_payable" });
+  ok(r.status === 400, "referral cannot be set to 'commission_payable' by hand");
+  r = await admin.patch(`/api/entities/Referral/${rg}`, { status: "contacted" });
+  ok(r.status === 200, "normal journey statuses are still editable");
+  await admin.patch(`/api/entities/Referral/${rg}`, { status: "treatment_completed" });
+  const cg = await admin.post("/api/fn/processCommission", { referralId: rg, grossAmount: 1000, eligibleAmount: 1000 });
+  ok(cg.status === 200 && cg.data.commission.client_name === "Status Guard", "commission remembers the client's name", JSON.stringify(cg.data).slice(0, 120));
+
+  const pEmail = `partner-${run}@example.com`;
+  await admin.patch(`/api/entities/Partner/${p1.id}`, { email: pEmail, contact_person: "Pat" });
+  const mails = (to, re) => fs.readFileSync(LOG, "utf8").split("[email:dev]").filter((b) => b.includes(`to=${to} `) && re.test(b)).length;
+  await admin.post("/api/fn/approveCommission", { commissionId: cg.data.commission.id, action: "approve" });
+  await sleep(400);
+  ok(mails(pEmail, /Your commission has been approved/) === 1, "partner is e-mailed when a commission is approved");
+  const pg = await admin.post("/api/fn/createPayout", { partnerId: p1.id, commissionIds: [cg.data.commission.id] });
+  await admin.patch(`/api/entities/Payout/${pg.data.payout.id}`, { status: "paid", payment_reference: "REF-4242" });
+  await sleep(400);
+  ok(mails(pEmail, /Your payout has been sent[\s\S]*REF-4242/) === 1, "partner is e-mailed (with the reference) when a payout is marked paid");
+  await admin.patch(`/api/entities/Payout/${pg.data.payout.id}`, { notes: "again" });
+  await sleep(300);
+  ok(mails(pEmail, /Your payout has been sent/) === 1, "no duplicate e-mail when a paid payout is edited again");
+
+  const setting = (await admin.post("/api/entities/ClinicSetting", { setting_key: "default", notify_email_on_commission_approval: false, notify_email_on_payout: false })).data;
+  const rg2 = await newRef("Silent Client", "+971 55 000 4444");
+  await admin.patch(`/api/entities/Referral/${rg2}`, { status: "treatment_completed" });
+  const cg2 = await admin.post("/api/fn/processCommission", { referralId: rg2, grossAmount: 500, eligibleAmount: 500 });
+  await admin.post("/api/fn/approveCommission", { commissionId: cg2.data.commission.id, action: "approve" });
+  await sleep(400);
+  ok(mails(pEmail, /Your commission has been approved/) === 1, "switching notifications off in Settings stops the e-mails");
+
+  r = await anon.get("/api/config");
+  ok(r.status === 200 && r.data.referralBaseUrl === null, "config: no custom link domain by default", JSON.stringify(r.data));
+  await admin.patch(`/api/entities/ClinicSetting/${setting.id}`, { referral_base_url: "https://join.example.com/" });
+  r = await anon.get("/api/config");
+  ok(r.data.referralBaseUrl === "https://join.example.com", "config: custom link domain is served (trailing slash removed)", JSON.stringify(r.data));
+  await admin.patch(`/api/entities/ClinicSetting/${setting.id}`, { referral_base_url: "https://join.example.com/r/" });
+  r = await anon.get("/api/config");
+  ok(r.data.referralBaseUrl === "https://join.example.com", "config: a trailing /r/ is tolerated", JSON.stringify(r.data));
+  for (const bad of ["javascript:alert(1)", "http://evil.example", "ftp://x.y", "https://a b.c"]) {
+    await admin.patch(`/api/entities/ClinicSetting/${setting.id}`, { referral_base_url: bad });
+    r = await anon.get("/api/config");
+    if (r.data.referralBaseUrl !== null) ok(false, `config rejects unsafe base URL ${bad}`, JSON.stringify(r.data));
+  }
+  ok(true, "config rejects unsafe / non-https base URLs");
+  await admin.patch(`/api/entities/ClinicSetting/${setting.id}`, { referral_base_url: "" });
+
+  const target = new Client(); const tEmail = `reset-${run}@example.com`;
+  await target.post("/api/auth/register", { email: tEmail, password: pw });
+  await target.post("/api/auth/verify-otp", { email: tEmail, otpCode: await otpFor(tEmail) });
+  const tId = (await target.get("/api/auth/me")).data.id;
+  r = await user.post(`/api/users/${tId}/reset-password`);
+  ok(r.status === 403, "a non-admin cannot reset passwords");
+  r = await admin.post(`/api/users/${adminMe.id}/reset-password`);
+  ok(r.status === 400, "admins use Change password for themselves");
+  r = await admin.post("/api/users/doesnotexist/reset-password");
+  ok(r.status === 404, "unknown user -> 404");
+  r = await admin.post(`/api/users/${tId}/reset-password`);
+  const temp = r.data.temporaryPassword;
+  ok(r.status === 200 && /^[A-Za-z0-9]{4}(-[A-Za-z0-9]{4}){3}$/.test(temp || ""), "admin gets a one-time temporary password", JSON.stringify(r.data));
+  ok((await target.get("/api/auth/me")).status === 401, "the user is signed out everywhere");
+  ok((await new Client().post("/api/auth/login", { email: tEmail, password: pw })).status === 401, "old password stops working");
+  ok((await new Client().post("/api/auth/login", { email: tEmail, password: temp })).status === 200, "temporary password works");
+
   console.log("\n== Password reset ==");
   r = await anon.post("/api/auth/password-reset/request", { email: `ghost-${run}@example.com` });
   const ghost = r;

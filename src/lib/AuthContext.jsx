@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { api } from '@/api/client';
+import { setReferralBase } from '@/lib/format';
 
 const AuthContext = createContext();
 
@@ -12,7 +13,9 @@ export const AuthProvider = ({ children }) => {
   const checkUserAuth = useCallback(async () => {
     try {
       setIsLoadingAuth(true);
+      const cfg = api.config().then((c) => setReferralBase(c && c.referralBaseUrl)).catch(() => {});
       const me = await api.auth.me();
+      await cfg;
       setUser(me);
       setAuthError(null);
     } catch (error) {

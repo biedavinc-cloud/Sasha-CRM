@@ -7,7 +7,7 @@ import { REFERRAL_STATUSES, formatDate, formatAED } from "@/lib/format";
 
 export default function MyReferrals() {
   const { partner } = useOutletContext();
-  const { items: referrals, loading } = useCollection("Referral", { partner_id: partner.id }, { sort: "-created_date", limit: 200 });
+  const { items: referrals, loading } = useCollection("Referral", { partner_id: partner.id }, { sort: "-created_date", limit: 2000 });
   const { items: comms } = useCollection("Commission", { partner_id: partner.id }, { limit: 500 });
   const commByReferral = Object.fromEntries(comms.map((c) => [c.referral_id, c.commission_amount]));
 

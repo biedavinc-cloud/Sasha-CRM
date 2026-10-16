@@ -35,8 +35,7 @@ describe('Auth pages (real <App/> in jsdom against the local Pages server)', () 
     await u.type(otp, code)
     await u.click(screen.getByRole('button', { name: 'Verify' }))
     await waitFor(() => expect(window.location.pathname).toBe('/admin'), { timeout: 20000 })
-    await act(async () => { await sleep(800) })
-    expect(document.body.textContent.length).toBeGreaterThan(200)
+    await waitFor(() => expect(document.body.textContent.length).toBeGreaterThan(200), { timeout: 20000 }) // pages load on demand
     expect(cap.problems).toEqual([]); cap.restore()
   })
 

@@ -59,6 +59,8 @@ export default async function(req: Request): Promise<Response> {
       partner_id: partner.id,
       partner_user_id: partner.user_id,
       partner_name: partner.business_name,
+      client_name: referral.client_name,
+      service_name: referral.service_name || referral.service_category || null,
       service_id: referral.service_id,
       service_name: referral.service_name,
       basis: partner.commission_basis || 'gross',
