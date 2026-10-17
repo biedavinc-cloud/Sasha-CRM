@@ -352,8 +352,8 @@ async function registerAndVerify(c, email, password) {
   ok((await new Client().post("/api/auth/login", { email: cpEmail, password: "Another-Pass1!" })).status === 200, "new password works");
 
   console.log("\n== Operations: status guard, client names, notifications, config, admin reset ==");
-  const newRef = async (name, phone) => (await anon.post("/api/fn/captureReferral", { referralCode: `ONE${run}`, clientName: name, clientPhone: phone })).data.referralId;
-  const rg = await newRef("Status Guard", "+971 55 000 3333");
+  const newRef = async (name, phone, serviceInterest) => (await anon.post("/api/fn/captureReferral", { referralCode: `ONE${run}`, clientName: name, clientPhone: phone, serviceInterest })).data.referralId;
+  const rg = await newRef("Status Guard", "+971 55 000 3333", "HydraFacial");
   r = await admin.patch(`/api/entities/Referral/${rg}`, { status: "paid" });
   ok(r.status === 400, "referral cannot be set to 'paid' by hand");
   r = await admin.patch(`/api/entities/Referral/${rg}`, { status: "commission_payable" });
@@ -362,7 +362,7 @@ async function registerAndVerify(c, email, password) {
   ok(r.status === 200, "normal journey statuses are still editable");
   await admin.patch(`/api/entities/Referral/${rg}`, { status: "treatment_completed" });
   const cg = await admin.post("/api/fn/processCommission", { referralId: rg, grossAmount: 1000, eligibleAmount: 1000 });
-  ok(cg.status === 200 && cg.data.commission.client_name === "Status Guard", "commission remembers the client's name", JSON.stringify(cg.data).slice(0, 120));
+  ok(cg.status === 200 && cg.data.commission.client_name === "Status Guard" && cg.data.commission.service_name === "HydraFacial", "commission remembers the client's name and the service", JSON.stringify(cg.data).slice(0, 120));
 
   const pEmail = `partner-${run}@example.com`;
   await admin.patch(`/api/entities/Partner/${p1.id}`, { email: pEmail, contact_person: "Pat" });
