@@ -1,9 +1,9 @@
-import { createClientFromRequest } from '../_lib/compat.ts';
+import { serverContext } from '../_lib/context.ts';
 
 export default async function(req) {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const ctx = serverContext(req);
+    const user = await ctx.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
@@ -18,7 +18,7 @@ export default async function(req) {
 
     let accessToken: string;
     try {
-      ({ accessToken } = await base44.asServiceRole.connectors.getConnection('github'));
+      ({ accessToken } = await ctx.asServiceRole.connectors.getConnection('github'));
     } catch {
       return Response.json({ error: 'GitHub is not configured on this deployment (set the GITHUB_TOKEN secret)' }, { status: 503 });
     }
@@ -30,7 +30,7 @@ export default async function(req) {
           'Authorization': `Bearer ${accessToken}`,
           'Accept': 'application/vnd.github+json',
           'X-GitHub-Api-Version': '2022-11-28',
-          'User-Agent': 'Sasha-CRM-Base44',
+          'User-Agent': 'Sasha-Connect',
         },
         signal: AbortSignal.timeout(15000),
       }

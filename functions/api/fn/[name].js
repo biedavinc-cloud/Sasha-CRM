@@ -1,7 +1,7 @@
 // POST /api/fn/:name — runs one of the business-logic functions in functions/_fn.
 import { HttpError, json, clientIp } from "../../_lib/util.js";
 import { getUser, rateLimit } from "../../_lib/auth.js";
-import { bindContext } from "../../_lib/compat.ts";
+import { bindContext } from "../../_lib/context.ts";
 
 import approveCommission from "../../_fn/approveCommission.ts";
 import captureReferral from "../../_fn/captureReferral.ts";

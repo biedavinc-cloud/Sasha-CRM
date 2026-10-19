@@ -1,6 +1,7 @@
 // GET /r/:code — serves the normal app, with Open Graph tags so the link looks professional when pasted into
 // WhatsApp / Instagram / Facebook / iMessage (social crawlers do not run JavaScript).
 import { normalizeCode } from "../_lib/partners.js";
+import { CSP } from "../_lib/csp.js";
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const OG_IMAGE = "https://images.unsplash.com/photo-1631730486572-226e5cabe731?w=1200&h=630&fit=crop&q=80";
@@ -50,6 +51,8 @@ export async function onRequestGet({ request, env, params, next }) {
   headers.set("content-type", "text/html; charset=utf-8");
   headers.set("cache-control", "no-store");
   headers.set("x-content-type-options", "nosniff");
+  headers.set("content-security-policy", CSP);
+  headers.set("x-frame-options", "DENY");
   headers.set("referrer-policy", "strict-origin-when-cross-origin");
   headers.delete("content-length");
   return new Response(html, { status: 200, headers });

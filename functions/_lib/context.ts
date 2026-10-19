@@ -1,5 +1,5 @@
-// Server-side stand-in for `createClientFromRequest` from the Base44 SDK, so the business-logic functions
-// in functions/_fn keep working unchanged. Implements only what they use.
+// Per-request context for the business-logic functions in functions/_fn: current user, service-role entity
+// access (bypasses row-level rules on purpose), the environment bindings and the site origin.
 import { entityStore } from "./db.js";
 
 const contexts = new WeakMap<Request, { env: any; user: any }>();
@@ -8,10 +8,10 @@ export function bindContext(req: Request, env: any, user: any) {
   contexts.set(req, { env, user });
 }
 
-export function createClientFromRequest(req: Request): any {
-  const ctx = contexts.get(req);
-  if (!ctx) throw new Error("Request context missing");
-  const { env, user } = ctx;
+export function serverContext(req: Request): any {
+  const bound = contexts.get(req);
+  if (!bound) throw new Error("Request context missing");
+  const { env, user } = bound;
   return {
     env,
     origin: new URL(req.url).origin,

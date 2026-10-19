@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { api } from "@/api/client";
-import { Image } from "@/components/ui/image";
+import BrandLogo from "@/components/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,8 +14,6 @@ import {
 } from "@/components/ui/select";
 import { CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 
-const LOGO_URL =
-  "https://media.base44.com/images/public/6ac79288ee14219d24c0ade5/ed87ef57a_SashaAestheticsLogo-4.png";
 const BG_IMAGE =
   "https://images.unsplash.com/photo-1631730486572-226e5cabe731?w=1200&q=80";
 
@@ -101,7 +99,7 @@ export default function ReferralLanding() {
         <div className="absolute inset-0 bg-gradient-to-br from-black/85 via-black/70 to-black/85" />
         <div className="relative z-10 flex flex-col justify-between p-12 text-white w-full">
           <div className="flex items-center gap-3">
-            <Image src={LOGO_URL} alt="Sasha Aesthetics" className="w-12 h-12 rounded-full" fittingType="fill" />
+            <BrandLogo className="w-12 h-12 rounded-full" />
             <span className="font-heading text-lg font-semibold tracking-[0.2em] uppercase">Sasha Aesthetics</span>
           </div>
           <div>
@@ -120,7 +118,7 @@ export default function ReferralLanding() {
       <div className="flex-1 flex items-center justify-center bg-background px-4 py-12">
         <div className="w-full max-w-md">
           <div className="flex justify-center mb-6">
-            <Image src={LOGO_URL} alt="Sasha Aesthetics" className="w-16 h-16 rounded-full" fittingType="fill" />
+            <BrandLogo className="w-16 h-16 rounded-full" />
           </div>
 
           {stage === "loading" && (

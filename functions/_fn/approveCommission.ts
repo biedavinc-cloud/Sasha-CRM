@@ -1,11 +1,11 @@
-import { createClientFromRequest } from '../_lib/compat.ts';
+import { serverContext } from '../_lib/context.ts';
 import { logAudit } from './shared/audit.ts';
 import { notifyCommissionApproved } from '../_lib/notify.js';
 
 export default async function(req: Request): Promise<Response> {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const ctx = serverContext(req);
+    const user = await ctx.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
@@ -13,7 +13,7 @@ export default async function(req: Request): Promise<Response> {
     const { commissionId, action, notes } = body;
     if (!commissionId || !action) return Response.json({ error: 'commissionId and action required' }, { status: 400 });
 
-    const commission = await base44.asServiceRole.entities.Commission.get(commissionId);
+    const commission = await ctx.asServiceRole.entities.Commission.get(commissionId);
     if (!commission) return Response.json({ error: 'Commission not found' }, { status: 404 });
 
     if (commission.status === 'paid') {
@@ -31,7 +31,7 @@ export default async function(req: Request): Promise<Response> {
       default: return Response.json({ error: 'Invalid action' }, { status: 400 });
     }
 
-    await base44.asServiceRole.entities.Commission.update(commissionId, {
+    await ctx.asServiceRole.entities.Commission.update(commissionId, {
       status: newStatus,
       approved_by: user.email,
       approved_date: new Date().toISOString(),
@@ -39,10 +39,10 @@ export default async function(req: Request): Promise<Response> {
     });
 
     if (referralStatus) {
-      await base44.asServiceRole.entities.Referral.update(commission.referral_id, { status: referralStatus });
+      await ctx.asServiceRole.entities.Referral.update(commission.referral_id, { status: referralStatus });
     }
 
-    await logAudit(base44, {
+    await logAudit(ctx, {
       action: 'commission_' + action,
       entity: 'Commission',
       entityId: commissionId,
@@ -51,7 +51,7 @@ export default async function(req: Request): Promise<Response> {
       details: `Commission ${action} by ${user.email}`,
     });
 
-    if (action === 'approve') await notifyCommissionApproved(base44.env, base44.origin, commission);
+    if (action === 'approve') await notifyCommissionApproved(ctx.env, ctx.origin, commission);
 
     return Response.json({ ok: true, status: newStatus });
   } catch (error) {

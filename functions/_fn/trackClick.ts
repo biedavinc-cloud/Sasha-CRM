@@ -1,14 +1,14 @@
-import { createClientFromRequest } from '../_lib/compat.ts';
+import { serverContext } from '../_lib/context.ts';
 
 export default async function(req: Request): Promise<Response> {
   try {
-    const base44 = createClientFromRequest(req);
+    const ctx = serverContext(req);
     const body = await req.json();
     const { utmSource, utmMedium, utmCampaign, referrerSource } = body;
     const referralCode = String(body.referralCode ?? '').trim().toUpperCase();
     if (!/^[A-Z0-9][A-Z0-9-]{2,39}$/.test(referralCode)) return Response.json({ error: 'Invalid referral code' }, { status: 404 });
 
-    const partners = await base44.asServiceRole.entities.Partner.filter({ referral_code: referralCode, status: 'active' });
+    const partners = await ctx.asServiceRole.entities.Partner.filter({ referral_code: referralCode, status: 'active' });
     const partnerArr = (partners as any)?.items || partners;
     if (!partnerArr?.length) return Response.json({ error: 'Invalid referral code' }, { status: 404 });
     const partner = partnerArr[0];
@@ -16,7 +16,7 @@ export default async function(req: Request): Promise<Response> {
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || null;
     const userAgent = req.headers.get('user-agent') || null;
 
-    const click = await base44.asServiceRole.entities.ReferralClick.create({
+    const click = await ctx.asServiceRole.entities.ReferralClick.create({
       click_id: 'CLK-' + Date.now() + '-' + crypto.randomUUID().slice(0, 4),
       partner_id: partner.id,
       referral_code: referralCode,

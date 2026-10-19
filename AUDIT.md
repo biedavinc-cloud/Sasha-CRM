@@ -106,3 +106,16 @@ Tests : 144 vérifications API + 59 tests d'interface (dont 9 contrôles d'acces
 | 42 | Pas de moyen pour l'admin de dépanner un mot de passe sans email. | Réinitialisation avec mot de passe provisoire à usage unique. |
 
 Limites inchangées : pas de test dans un vrai navigateur (jsdom ≠ Chrome), ni Google OAuth, ni envoi réel d'emails (nécessite Resend).
+
+## Mise à jour — 6ᵉ série (finalisation pour la production)
+Tests : 144 API + 62 interface + 10 « sans email ».
+
+| # | Constat | Statut |
+|---|---|---|
+| 43 | Créer un partenaire avec un email **échouait silencieusement** quand l'envoi d'email était indisponible : le partenaire était créé sans compte de connexion. | Corrigé : mot de passe provisoire affiché une seule fois ; plus aucune erreur avalée. |
+| 44 | Un partenaire créé par l'administration devait en plus déposer une demande d'accès (double validation). | Un compte lié à une fiche partenaire est approuvé d'office (sauf refus explicite) — côté serveur et à l'écran. |
+| 45 | Politique de sécurité du navigateur (CSP) seulement en mode « rapport ». | Appliquée (vérifié : aucun `eval`, aucun script inline autre que le watchdog signé). |
+| 46 | Restes de l'ancienne plateforme : dossier `base44/`, README et AGENTS d'origine, scripts, composants d'images, noms de variables, réglage `.npmrc`. | Supprimés / renommés. Seule dépendance restante : le logo (repli automatique, voir ci-dessous). |
+| 47 | Logo hébergé chez l'ancien fournisseur (risque de disparition). | Le site lit d'abord `public/logo.png`, puis l'ancienne adresse, puis un monogramme : jamais d'image cassée. |
+| 48 | Pages non protégées contre l'indexation / l'encadrement. | `robots.txt`, `X-Robots-Tag`, `X-Frame-Options`. |
+| 49 | Pas de procédure de sauvegarde / restauration / lancement. | `docs/PRODUCTION.md`, commande `npm run backup`. |

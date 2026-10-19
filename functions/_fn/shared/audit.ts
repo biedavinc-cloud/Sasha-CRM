@@ -1,4 +1,4 @@
-export async function logAudit(base44: any, entry: {
+export async function logAudit(ctx: any, entry: {
   action: string;
   entity: string;
   entityId?: string;
@@ -7,8 +7,8 @@ export async function logAudit(base44: any, entry: {
   details?: string;
 }) {
   try {
-    const user = await base44.auth.me().catch(() => null);
-    await base44.asServiceRole.entities.AuditLog.create({
+    const user = await ctx.auth.me().catch(() => null);
+    await ctx.asServiceRole.entities.AuditLog.create({
       action: entry.action,
       entity: entry.entity,
       entity_id: entry.entityId || null,

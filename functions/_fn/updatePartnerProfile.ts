@@ -1,16 +1,16 @@
-import { createClientFromRequest } from '../_lib/compat.ts';
+import { serverContext } from '../_lib/context.ts';
 import { logAudit } from './shared/audit.ts';
 
 const ALLOWED_FIELDS = ['contact_person', 'phone', 'address'];
 
 export default async function(req: Request): Promise<Response> {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const ctx = serverContext(req);
+    const user = await ctx.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const partners = await base44.asServiceRole.entities.Partner.filter({ user_id: user.id });
+    const partners = await ctx.asServiceRole.entities.Partner.filter({ user_id: user.id });
     if (!partners.length) return Response.json({ error: 'Partner profile not found' }, { status: 404 });
     const partner = partners[0];
 
@@ -26,9 +26,9 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ error: 'No updatable fields provided' }, { status: 400 });
     }
 
-    const updated = await base44.asServiceRole.entities.Partner.update(partner.id, update);
+    const updated = await ctx.asServiceRole.entities.Partner.update(partner.id, update);
 
-    await logAudit(base44, {
+    await logAudit(ctx, {
       action: 'partner_profile_updated',
       entity: 'Partner',
       entityId: partner.id,

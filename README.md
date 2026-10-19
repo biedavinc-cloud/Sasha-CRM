@@ -1,62 +1,47 @@
-# Base44 Project
+# Sasha Connect: partner referral CRM on Cloudflare Pages
 
-Use this repository to run and edit the app locally, then publish changes back through Base44.
+Frontend: Vite + React (`dist/`). Backend: Pages Functions (`functions/`) + D1 (SQLite).
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
-
-## Prerequisites
-
-1. Clone the repository using the project's Git URL.
-2. Navigate to the project directory.
-3. Install dependencies: `npm install`.
-4. Install the Base44 CLI: `npm install -g base44@latest`.
-5. Install [Deno](https://docs.deno.com/runtime/getting_started/installation/) — the local Base44 backend runs on it.
-
-Run `base44 --help` (or see the [CLI reference](https://docs.base44.com/developers/references/cli/commands/introduction)) for the full command surface.
-
-## Run Locally
-
-Three commands, from the project root:
-
-```bash
-base44 login   # one-time per machine
-base44 link    # one-time per clone
-base44 dev     # local backend + frontend together
+```
+functions/api/auth/     register · verify-otp · login · logout · me · password reset · Google (optional)
+functions/api/entities/ REST over the entity store, with row-level security (functions/_lib/policies.generated.js)
+functions/api/users/    admin: list / change role / invite
+functions/api/fn/       business logic (functions/_fn/*): commissions, payouts, referral capture, GitHub
+migrations/             D1 schema
+src/api/client.js       frontend API client
+scripts/smoke-test.mjs  144 API checks (auth, RLS, field-level security, referral codes, notifications, money rules, rate limits…)
+scripts/no-email-test.mjs  10 checks of onboarding without e-mail delivery
+tests/ui/               62 UI tests: the real <App/> in jsdom against the local server (auth, every admin/portal page, admin actions, partner link page, public form, accessibility scan)
 ```
 
-Open the frontend URL that `base44 dev` prints (typically `http://localhost:5173`).
-
-Notes:
-
-- **Every fresh clone needs `base44 link`.** It writes `base44/.app.jsonc` (the app-id pointer), which is deliberately gitignored. Your app id is in the Builder URL (`app.base44.com/apps/<id>/...`); `base44 link --help` shows the non-interactive flags.
-- **`base44 dev` runs the frontend for you** (via `site.serveCommand` in this repo's `base44/config.jsonc`) — never run `npm run dev` yourself: alone it serves a UI with no backend behind it (`[base44] Proxy not enabled`, every `/api` call fails), and alongside `base44 dev` the second Vite silently takes the next port and you end up looking at the wrong one.
-- **The app must be published at least once for the UI to load under `base44 dev`.** The frontend boots by fetching app settings from the hosted app; before the first publish that fails and every page redirects to login. The local API works regardless.
-- Entities, functions, and auth run locally — entity data is **in-memory only**, wiped when `base44 dev` restarts. Everything else (Core integrations, OAuth login) is forwarded to your deployed app. Full breakdown: [Local development overview](https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview).
-
-## Frontend Only, Hosted Backend
-
-To work on just the frontend against your app's live hosted backend:
-
+## Local development
 ```bash
-base44 dev --remote
+npm install
+npm run build
+npm run cf:migrate:local
+npm run cf:dev            # http://localhost:8788  (API + built frontend, local D1)
+# second terminal, for hot reload: npm run dev   (Vite proxies /api to :8788)
+```
+Local secrets: copy `.dev.vars.example` to `.dev.vars` (git-ignored). With `DEV_EMAIL_LOG=1`, emails (OTP codes, reset links) are printed in the `cf:dev` console.
+
+Tests (start `npm run cf:dev` on a fresh DB first: stop it, delete `.wrangler/state`, run `npm run cf:migrate:local`):
+```bash
+WRANGLER_LOG=<file with the cf:dev output> npm run test:api   # API checks
+WRANGLER_LOG=<file with the cf:dev output> npm run test:ui    # UI tests
 ```
 
-⚠️ In this mode writes go to your app's **production data** — plain `base44 dev` keeps everything local.
+## First deploy
+`wrangler.toml` is the deployment config (`pages_build_output_dir = "dist"`), so the output directory never depends on a dashboard setting. `wrangler.local.toml` is for local dev only. Production operations (backups, restore, go-live checklist): see `docs/PRODUCTION.md`.
 
-## Publish Your Changes
+1. **D1**: Cloudflare → Storage & Databases → D1 → Create `sasha-crm`. Copy its **Database ID**. Open it → Console → run `migrations/0001_init.sql`, then `migrations/0002_indexes.sql`.
+2. **Bind it**: in `wrangler.toml`, uncomment the `[[d1_databases]]` block and paste the real `database_id` (commit to `main`).
+3. **Pages project** (connected to this repo): build command `npm run build`.
+4. Project → Settings → **Variables and Secrets** (type: Secret): `AUTH_SECRET` (random, 32+ chars), `ADMIN_EMAILS` (comma list; these emails become admin once verified), `RESEND_API_KEY`, `EMAIL_FROM` (e.g. `Sasha Connect <no-reply@yourdomain.com>`).
+5. Deployments → Retry deployment. Until the D1 binding exists, the API answers `503 Database is not configured`.
+6. **Check it**: open `https://<your-site>/api/health`. It must show `"ok":true`; otherwise `db`, `migrated`, `secrets.*` tell you exactly what is missing (booleans only, no secret values).
 
-After pushing your changes to git, open the Base44 dashboard and publish the app:
+**Workers Free plan:** password hashing (PBKDF2, 100k iterations) can exceed the 10 ms CPU limit ("Error 1102" on login/register). Either use the Workers Paid plan (recommended) or set `PBKDF2_ITERATIONS` (e.g. `20000`); existing hashes keep working.
+Without `RESEND_API_KEY`, sign-up answers `503 Email delivery is not configured` instead of pretending a code was sent.
 
-```bash
-base44 dashboard open
-```
+Optional secrets: `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` (redirect URI `https://<your-domain>/api/auth/google/callback`; the button appears automatically), `GITHUB_TOKEN` and `ENABLE_GITHUB_PUSH=1` (admin → GitHub page; leave unset unless you need it — it lets an admin session write to the repo).
 
-This repo syncs to Base44 through git, so publish from the dashboard rather than `base44 deploy` — a CLI deploy ships your local tree directly, bypassing the sync, and the deployed state silently diverges from the repo.
-
-## Docs & Support
-
-GitHub integration: [https://docs.base44.com/developers/app-code/local-development/github](https://docs.base44.com/developers/app-code/local-development/github)
-
-Local development: [https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview](https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview)
-
-Support: [https://app.base44.com/support](https://app.base44.com/support)

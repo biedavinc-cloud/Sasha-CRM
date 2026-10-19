@@ -1,5 +1,5 @@
 // Frontend client for the Cloudflare Pages Functions backend (see /functions).
-// Mirrors the small slice of the former Base44 SDK that the app used, so pages need few changes.
+// Thin client for the Cloudflare Pages Functions API (/api/*): auth, entities, users and business functions.
 
 export class ApiError extends Error {
   constructor(message, status, data) {

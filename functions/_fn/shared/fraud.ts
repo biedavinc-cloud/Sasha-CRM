@@ -18,7 +18,7 @@ function unwrap<T>(result: any): T[] {
 }
 
 export async function runFraudChecks(
-  base44: any,
+  ctx: any,
   opts: {
     partner: any;
     clientPhone?: string | null;
@@ -34,7 +34,7 @@ export async function runFraudChecks(
   // 1 — Duplicate phone across ALL partners (cross-partner is more suspicious)
   if (clientPhone) {
     const dup = unwrap(
-      await base44.asServiceRole.entities.Referral.filter(
+      await ctx.asServiceRole.entities.Referral.filter(
         { client_phone: clientPhone },
         { limit: 50 }
       )
@@ -56,7 +56,7 @@ export async function runFraudChecks(
   // 2 — Duplicate email
   if (clientEmail) {
     const dup = unwrap(
-      await base44.asServiceRole.entities.Referral.filter(
+      await ctx.asServiceRole.entities.Referral.filter(
         { client_email: clientEmail },
         { limit: 50 }
       )
@@ -82,7 +82,7 @@ export async function runFraudChecks(
   // 4 — Velocity: too many referrals from this partner in the last hour
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const recent = unwrap(
-    await base44.asServiceRole.entities.Referral.filter(
+    await ctx.asServiceRole.entities.Referral.filter(
       { partner_id: partner.id, created_date: { $gte: oneHourAgo } },
       { limit: 50 }
     )
@@ -97,7 +97,7 @@ export async function runFraudChecks(
   // 5 — Multiple conversions from the same IP
   if (clientIp) {
     const sameIp = unwrap(
-      await base44.asServiceRole.entities.ReferralClick.filter(
+      await ctx.asServiceRole.entities.ReferralClick.filter(
         { ip_address: clientIp, converted: true },
         { limit: 50 }
       )
@@ -113,7 +113,7 @@ export async function runFraudChecks(
   // 6 — Click-to-conversion time too fast (< 2 minutes = bot-like)
   if (clickId) {
     try {
-      const click = await base44.asServiceRole.entities.ReferralClick.get(clickId);
+      const click = await ctx.asServiceRole.entities.ReferralClick.get(clickId);
       if (click) {
         const elapsed = Date.now() - new Date(click.created_date).getTime();
         if (elapsed < 2 * 60 * 1000) {

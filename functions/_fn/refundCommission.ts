@@ -1,10 +1,10 @@
-import { createClientFromRequest } from '../_lib/compat.ts';
+import { serverContext } from '../_lib/context.ts';
 import { logAudit } from './shared/audit.ts';
 
 export default async function(req: Request): Promise<Response> {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const ctx = serverContext(req);
+    const user = await ctx.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
@@ -12,7 +12,7 @@ export default async function(req: Request): Promise<Response> {
     const { commissionId, reason } = body;
     if (!commissionId) return Response.json({ error: 'commissionId required' }, { status: 400 });
 
-    const commission = await base44.asServiceRole.entities.Commission.get(commissionId);
+    const commission = await ctx.asServiceRole.entities.Commission.get(commissionId);
     if (!commission) return Response.json({ error: 'Commission not found' }, { status: 404 });
 
     const previous = { status: commission.status, amount: commission.commission_amount };
@@ -20,16 +20,16 @@ export default async function(req: Request): Promise<Response> {
 
     if (commission.status === 'paid') {
       // Already paid — mark disputed for manual clawback from the payout
-      await base44.asServiceRole.entities.Commission.update(commissionId, {
+      await ctx.asServiceRole.entities.Commission.update(commissionId, {
         status: 'disputed',
         adjustment_notes: `REFUND/REVERSAL: ${reasonText}`,
       });
-      await base44.asServiceRole.entities.Referral.update(commission.referral_id, {
+      await ctx.asServiceRole.entities.Referral.update(commission.referral_id, {
         status: 'refunded',
         notes: `Commission reversed: ${reasonText}`,
       });
       if (commission.payout_id) {
-        await logAudit(base44, {
+        await logAudit(ctx, {
           action: 'commission_refund_clawback_needed',
           entity: 'Payout',
           entityId: commission.payout_id,
@@ -39,17 +39,17 @@ export default async function(req: Request): Promise<Response> {
       }
     } else {
       // Not yet paid — simply reject and mark referral refunded
-      await base44.asServiceRole.entities.Commission.update(commissionId, {
+      await ctx.asServiceRole.entities.Commission.update(commissionId, {
         status: 'rejected',
         adjustment_notes: `REFUND/REVERSAL: ${reasonText}`,
       });
-      await base44.asServiceRole.entities.Referral.update(commission.referral_id, {
+      await ctx.asServiceRole.entities.Referral.update(commission.referral_id, {
         status: 'refunded',
         notes: `Commission reversed: ${reasonText}`,
       });
     }
 
-    await logAudit(base44, {
+    await logAudit(ctx, {
       action: 'commission_refunded',
       entity: 'Commission',
       entityId: commissionId,

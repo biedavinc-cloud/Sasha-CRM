@@ -1,0 +1,3 @@
+// Content-Security-Policy for pages served by Functions (static files get the same policy from public/_headers).
+// The hash allows the single inline "app failed to start" watchdog script in index.html and nothing else.
+export const CSP = "default-src 'self'; script-src 'self' 'sha256-Y7mYwixXoS11W4uWKy+kTzp8VqTN3yp2hu3pZSE+KHw='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'; upgrade-insecure-requests";

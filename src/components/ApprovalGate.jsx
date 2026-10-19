@@ -16,7 +16,15 @@ export default function ApprovalGate({ children }) {
     (async () => {
       try {
         const reqs = await api.entities.AccessRequest.filter({ user_id: user.id });
-        setRequest(reqs[0] || null);
+        let req = reqs[0] || null;
+        if (!req || req.status === "pending") {
+          // an account created by head office for a partner is approved by definition
+          try {
+            const linked = await api.entities.Partner.filter({ user_id: user.id }, { limit: 1 });
+            if (linked.length) req = { ...(req || {}), status: "approved" };
+          } catch { /* not approved yet */ }
+        }
+        setRequest(req);
       } catch (e) {
         setRequest(null);
       } finally {

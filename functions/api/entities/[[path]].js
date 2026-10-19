@@ -22,8 +22,12 @@ const parseQ = (url) => {
 // Non-admins only reach the data once head office approved them (enforced here, not just in the UI).
 async function assertApproved(env, user) {
   if (user.role === "admin") return;
-  const n = await entityStore(env, "AccessRequest").count({ user_id: user.id, status: "approved" });
-  if (!n) throw new HttpError(403, "Your account is awaiting approval");
+  const [request] = await entityStore(env, "AccessRequest").filter({ user_id: user.id }, { limit: 1 });
+  if (request && request.status === "approved") return;
+  if (request && request.status === "rejected") throw new HttpError(403, "Your access request was declined");
+  // A partner account created by head office (linked to a Partner record) needs no separate request
+  if (await entityStore(env, "Partner").count({ user_id: user.id })) return;
+  throw new HttpError(403, "Your account is awaiting approval");
 }
 
 export async function onRequest({ request, env, params }) {

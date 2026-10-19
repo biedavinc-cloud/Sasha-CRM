@@ -1,4 +1,4 @@
-// Generic entity store on D1: Base44-compatible record shape and Mongo-style queries.
+// Generic entity store on D1: JSON records with id / created_date / updated_date / created_by and Mongo-style queries.
 import { HttpError, uid, nowIso } from "./util.js";
 import { ENTITIES } from "./policies.generated.js";
 

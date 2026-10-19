@@ -1,10 +1,10 @@
-// Row-level security evaluator for the rules in policies.generated.js (Base44 "rls" format).
+// Row-level security evaluator for the rules in policies.generated.js.
 // Result of evaluating a rule: true (unrestricted) | false (denied) | a query object (row restriction).
 import { HttpError } from "./util.js";
 import { ENTITIES } from "./policies.generated.js";
 
 const ADMIN_ONLY = { user_condition: { role: "admin" } };
-// Hardening vs. the Base44 config: these were open to any signed-in user, but the app only ever writes
+// Hardening: these were open to any signed-in user, but the app only ever writes
 // them from server functions (service role), so direct client writes are admin-only.
 const OVERRIDES = {
   AuditLog: { create: ADMIN_ONLY },

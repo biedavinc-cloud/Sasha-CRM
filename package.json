@@ -14,7 +14,9 @@
     "cf:migrate:local": "wrangler d1 migrations apply sasha-crm --local -c wrangler.local.toml",
     "cf:migrate:remote": "wrangler d1 migrations apply sasha-crm --remote",
     "test:api": "node scripts/smoke-test.mjs",
-    "test:ui": "vitest run"
+    "test:ui": "vitest run",
+    "test:no-email": "node scripts/no-email-test.mjs",
+    "backup": "mkdir -p backups && wrangler d1 export sasha-crm --remote --output backups/sasha-crm-$(date +%Y%m%d-%H%M).sql"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.3",

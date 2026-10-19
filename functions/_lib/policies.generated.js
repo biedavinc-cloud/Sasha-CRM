@@ -1,4 +1,4 @@
-// GENERATED from base44/entities/*.jsonc by scripts/gen-policies.mjs — now the source of truth.
+// Entity definitions: defaults, enums, required fields and row-level security rules. This file is the source of truth.
 export const ENTITIES = {
   "AccessRequest": {
     "defaults": {

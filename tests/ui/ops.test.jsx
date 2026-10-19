@@ -144,3 +144,20 @@ describe('Custom link domain', () => {
     await waitFor(() => expect(document.body.textContent).toContain(`${window.location.origin}/r/${ids.partner.referral_code}`), { timeout: 15000 })
   })
 })
+
+describe('Partner accounts created by head office', () => {
+  test('a login linked to a Partner record reaches the portal without filing an access request', async () => {
+    const cap = captureProblems()
+    const email = 'linked-partner@example.com'
+    await asUser(email)
+    const me = (await api('GET', '/api/auth/me')).data
+    await asUser(ADMIN)
+    const p = (await api('POST', '/api/entities/Partner', { business_name: 'Linked Studio', user_id: me.id, status: 'active', email, contact_person: 'Lia' })).data
+    expect(p.referral_code).toBeTruthy()
+    await asUser(email)
+    await open('/portal')
+    expect(screen.queryByText('Request Access')).toBeNull()
+    await waitFor(() => expect(document.body.textContent).toContain('Linked Studio'), { timeout: 15000 })
+    expect(cap.problems).toEqual([]); cap.restore()
+  })
+})

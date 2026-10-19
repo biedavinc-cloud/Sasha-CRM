@@ -1,0 +1,10 @@
+# Private application: nothing here should be indexed.
+# Link-preview crawlers may read referral pages so WhatsApp / Facebook / X show a proper card.
+User-agent: facebookexternalhit
+Allow: /r/
+User-agent: WhatsApp
+Allow: /r/
+User-agent: Twitterbot
+Allow: /r/
+User-agent: *
+Disallow: /

@@ -1,11 +1,11 @@
-import { createClientFromRequest } from '../_lib/compat.ts';
+import { serverContext } from '../_lib/context.ts';
 import { calculateCommissionAmount } from './shared/commission.ts';
 import { logAudit } from './shared/audit.ts';
 
 export default async function(req: Request): Promise<Response> {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const ctx = serverContext(req);
+    const user = await ctx.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
@@ -13,10 +13,10 @@ export default async function(req: Request): Promise<Response> {
     const { referralId, grossAmount, eligibleAmount } = body;
     if (!referralId) return Response.json({ error: 'referralId is required' }, { status: 400 });
 
-    const referral = await base44.asServiceRole.entities.Referral.get(referralId);
+    const referral = await ctx.asServiceRole.entities.Referral.get(referralId);
     if (!referral) return Response.json({ error: 'Referral not found' }, { status: 404 });
 
-    const partner = await base44.asServiceRole.entities.Partner.get(referral.partner_id);
+    const partner = await ctx.asServiceRole.entities.Partner.get(referral.partner_id);
     if (!partner) return Response.json({ error: 'Partner not found' }, { status: 404 });
 
     const serviceId = referral.service_id;
@@ -35,7 +35,7 @@ export default async function(req: Request): Promise<Response> {
     }
 
     // One live commission per referral (a rejected one may be recalculated)
-    const existing = await base44.asServiceRole.entities.Commission.filter({ referral_id: referralId });
+    const existing = await ctx.asServiceRole.entities.Commission.filter({ referral_id: referralId });
     if (existing.some((c: any) => c.status !== 'rejected')) {
       return Response.json({ error: 'A commission already exists for this referral' }, { status: 409 });
     }
@@ -53,7 +53,7 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ error: 'Transaction does not meet minimum amount' }, { status: 400 });
     }
 
-    const commission = await base44.asServiceRole.entities.Commission.create({
+    const commission = await ctx.asServiceRole.entities.Commission.create({
       commission_id: 'C-' + Date.now() + '-' + crypto.randomUUID().slice(0, 4),
       referral_id: referralId,
       partner_id: partner.id,
@@ -70,14 +70,14 @@ export default async function(req: Request): Promise<Response> {
       status: 'pending',
     });
 
-    await base44.asServiceRole.entities.Referral.update(referralId, {
+    await ctx.asServiceRole.entities.Referral.update(referralId, {
       status: 'commission_pending',
       gross_amount: gross,
       eligible_amount: calc.base,
       commission_id: commission.id,
     });
 
-    await logAudit(base44, {
+    await logAudit(ctx, {
       action: 'commission_created',
       entity: 'Commission',
       entityId: commission.id,

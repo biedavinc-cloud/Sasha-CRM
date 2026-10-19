@@ -1,9 +1,9 @@
-import { createClientFromRequest } from '../_lib/compat.ts';
+import { serverContext } from '../_lib/context.ts';
 import { runFraudChecks } from './shared/fraud.ts';
 
 export default async function(req: Request): Promise<Response> {
   try {
-    const base44 = createClientFromRequest(req);
+    const ctx = serverContext(req);
     const body = await req.json();
     const { serviceInterest, utmSource, utmMedium, utmCampaign } = body;
     const referralCode = String(body.referralCode ?? '').trim().toUpperCase();
@@ -18,13 +18,13 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ error: 'Please enter a valid email address' }, { status: 400 });
     }
 
-    const partners = await base44.asServiceRole.entities.Partner.filter({ referral_code: referralCode, status: 'active' });
+    const partners = await ctx.asServiceRole.entities.Partner.filter({ referral_code: referralCode, status: 'active' });
     const partnerArr = (partners as any)?.items || partners;
     if (!partnerArr?.length) return Response.json({ error: 'Invalid referral code' }, { status: 404 });
     const partner = partnerArr[0];
 
     // Same person submitting twice (double tap, refresh) must not create two referrals / two commissions
-    const recent = await base44.asServiceRole.entities.Referral.filter({ partner_id: partner.id, client_phone: clientPhone }, { sort: '-created_date', limit: 1 });
+    const recent = await ctx.asServiceRole.entities.Referral.filter({ partner_id: partner.id, client_phone: clientPhone }, { sort: '-created_date', limit: 1 });
     if (recent.length && Date.now() - new Date(recent[0].created_date).getTime() < 24 * 3600 * 1000) {
       return Response.json({ ok: true, referralId: recent[0].id });
     }
@@ -32,7 +32,7 @@ export default async function(req: Request): Promise<Response> {
     // A click id only counts if it is a real, unconverted click of THIS partner
     let clickId: string | null = null;
     if (typeof body.clickId === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(body.clickId)) {
-      const click = await base44.asServiceRole.entities.ReferralClick.get(body.clickId);
+      const click = await ctx.asServiceRole.entities.ReferralClick.get(body.clickId);
       if (click && click.partner_id === partner.id && !click.converted) clickId = click.id;
     }
 
@@ -40,7 +40,7 @@ export default async function(req: Request): Promise<Response> {
     const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || null;
 
     // Run multi-criteria fraud scoring
-    const fraud = await runFraudChecks(base44, {
+    const fraud = await runFraudChecks(ctx, {
       partner,
       clientPhone: clientPhone || null,
       clientEmail: clientEmail || null,
@@ -48,7 +48,7 @@ export default async function(req: Request): Promise<Response> {
       clickId: clickId || null,
     });
 
-    const referral = await base44.asServiceRole.entities.Referral.create({
+    const referral = await ctx.asServiceRole.entities.Referral.create({
       referral_id: 'R-' + Date.now() + '-' + crypto.randomUUID().slice(0, 4),
       partner_id: partner.id,
       partner_user_id: partner.user_id,
@@ -71,7 +71,7 @@ export default async function(req: Request): Promise<Response> {
     // Mark the click as converted
     if (clickId) {
       try {
-        await base44.asServiceRole.entities.ReferralClick.update(clickId, {
+        await ctx.asServiceRole.entities.ReferralClick.update(clickId, {
           converted: true,
           referral_id: referral.id,
         });

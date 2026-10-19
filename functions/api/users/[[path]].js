@@ -8,6 +8,13 @@ import { issueLink } from "../../_lib/flows.js";
 
 const ROLES = ["admin", "user"];
 
+// 16 characters from an alphabet without look-alikes, formatted XXXX-XXXX-XXXX-XXXX
+function generateTemporaryPassword() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  const raw = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => alphabet[b % alphabet.length]);
+  return [0, 4, 8, 12].map((i) => raw.slice(i, i + 4).join("")).join("-");
+}
+
 export async function onRequest({ request, env, params }) {
   const [a] = Array.isArray(params.path) ? params.path : params.path ? [params.path] : [];
   const me = await requireUser(env, request);
@@ -32,19 +39,31 @@ export async function onRequest({ request, env, params }) {
         "INSERT INTO users (id, email, role, email_verified, created_date, updated_date) VALUES (?, ?, ?, 0, ?, ?)"
       ).bind(user.id, email, role, now, now).run();
     }
-    // Only send a set-password link if the person has no password yet.
-    if (!user.password_hash) await issueLink(env, request, user, "invite");
-    return json({ id: user.id, email, role: user.role }, 201);
+    // Only a person without a password needs a way in: e-mail a set-password link, or - when e-mail delivery is not
+    // available - hand the admin a one-time temporary password instead of failing.
+    let emailSent = false;
+    let temporaryPassword = null;
+    if (!user.password_hash) {
+      try {
+        await issueLink(env, request, user, "invite");
+        emailSent = true;
+      } catch (e) {
+        if (!(e instanceof HttpError) || ![502, 503].includes(e.status)) throw e;
+        temporaryPassword = generateTemporaryPassword();
+        await env.DB.batch([
+          env.DB.prepare("DELETE FROM auth_codes WHERE user_id = ? AND kind IN ('reset','invite')").bind(user.id),
+          env.DB.prepare("UPDATE users SET password_hash = ?, email_verified = 1, updated_date = ? WHERE id = ?").bind(await hashPassword(temporaryPassword, env), nowIso(), user.id),
+        ]);
+      }
+    }
+    return json({ id: user.id, email, role: user.role, emailSent, temporaryPassword }, 201);
   }
 
   if (a && request.method === "POST" && Array.isArray(params.path) && params.path[1] === "reset-password") {
     const target = await env.DB.prepare("SELECT id, email FROM users WHERE id = ?").bind(a).first();
     if (!target) throw new HttpError(404, "User not found");
     if (target.id === me.id) throw new HttpError(400, "Use Change password for your own account");
-    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-    const bytes = crypto.getRandomValues(new Uint8Array(16));
-    const raw = Array.from(bytes, (b) => alphabet[b % alphabet.length]);
-    const temporaryPassword = [raw.slice(0, 4), raw.slice(4, 8), raw.slice(8, 12), raw.slice(12, 16)].map((g) => g.join("")).join("-");
+    const temporaryPassword = generateTemporaryPassword();
     await env.DB.prepare("UPDATE users SET password_hash = ?, email_verified = 1, updated_date = ? WHERE id = ?")
       .bind(await hashPassword(temporaryPassword, env), nowIso(), a).run();
     await destroyAllSessions(env, a); // they are signed out everywhere and must use the new password

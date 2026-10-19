@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { notifyError } from "@/lib/notify";
+import TempPasswordDialog from "@/components/crm/TempPasswordDialog";
 import { UserCog, UserPlus, Shield, Handshake, Clock } from "lucide-react";
 import { api } from "@/api/client";
 import { PageHeader, Card, Spinner, Th, Td, EmptyState } from "@/components/crm/ui";
@@ -17,6 +18,7 @@ export default function Users() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user: me } = useAuth();
+  const [inviteCreds, setInviteCreds] = useState(null);
   const [resetFor, setResetFor] = useState(null);
   const [resetResult, setResetResult] = useState(null);
   const [resetting, setResetting] = useState(false);
@@ -56,7 +58,8 @@ export default function Users() {
     if (!email) return;
     setSaving(true);
     try {
-      await api.users.inviteUser(email, role);
+      const res = await api.users.inviteUser(email, role);
+      if (res?.temporaryPassword) setInviteCreds({ email, password: res.temporaryPassword });
       setOpen(false);
       setEmail("");
       setRole("user");
@@ -266,7 +269,7 @@ export default function Users() {
               </Select>
             </div>
             <p className="text-xs text-muted-foreground">
-              Invited users must still complete an access request and be approved by the head office before activation.
+              Invited staff must still complete an access request and be approved by head office. Partners created from the Partners page get access automatically.
             </p>
           </div>
           <DialogFooter>
@@ -308,6 +311,8 @@ export default function Users() {
           )}
         </DialogContent>
       </Dialog>
+
+      <TempPasswordDialog creds={inviteCreds} onClose={() => setInviteCreds(null)} title="Invitation" />
     </div>
   );
 }

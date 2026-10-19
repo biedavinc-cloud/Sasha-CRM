@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { notifyError } from "@/lib/notify";
+import TempPasswordDialog from "@/components/crm/TempPasswordDialog";
 import { Link } from "react-router-dom";
 import { Plus, Handshake, Search } from "lucide-react";
 import { api } from "@/api/client";
@@ -29,6 +30,7 @@ export default function Partners() {
     });
     setOpen(true);
   };
+  const [creds, setCreds] = useState(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty);
   const [saving, setSaving] = useState(false);
@@ -43,8 +45,12 @@ export default function Partners() {
     setSaving(true);
     try {
       let userId = "";
+      let newCreds = null;
       if (form.email) {
-        try { const res = await api.users.inviteUser(form.email, "user"); userId = res?.id || res?.data?.id || ""; } catch (e) { /* may already exist */ }
+        // errors (e.g. invalid address) stop here: never create a partner whose login silently failed
+        const res = await api.users.inviteUser(form.email, "user");
+        userId = res?.id || "";
+        if (res?.temporaryPassword) newCreds = { email: form.email, password: res.temporaryPassword };
       }
       await api.entities.Partner.create({
         ...form,
@@ -57,6 +63,7 @@ export default function Partners() {
       setOpen(false);
       setForm(empty);
       reload();
+      if (newCreds) setCreds(newCreds);
     } catch (e) {
       notifyError(e.message || "Failed to create partner");
     } finally {
@@ -165,6 +172,7 @@ export default function Partners() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <TempPasswordDialog creds={creds} onClose={() => setCreds(null)} title="Partner login details" />
     </div>
   );
 }
