@@ -119,3 +119,4 @@ Tests : 144 API + 62 interface + 10 « sans email ».
 | 47 | Logo hébergé chez l'ancien fournisseur (risque de disparition). | Le site lit d'abord `public/logo.png`, puis l'ancienne adresse, puis un monogramme : jamais d'image cassée. |
 | 48 | Pages non protégées contre l'indexation / l'encadrement. | `robots.txt`, `X-Robots-Tag`, `X-Frame-Options`. |
 | 49 | Pas de procédure de sauvegarde / restauration / lancement. | `docs/PRODUCTION.md`, commande `npm run backup`. |
+| 50 | **En production** : ouvrir la page Settings créait automatiquement une ligne de réglages contenant un domaine inventé (`sasha.ae`) ; une fois le « domaine personnalisé » actif, tous les liens de parrainage et QR auraient pointé vers ce domaine inexistant. | Ligne corrigée dans la base ; le serveur et l'écran ignorent désormais cette valeur (testé). |

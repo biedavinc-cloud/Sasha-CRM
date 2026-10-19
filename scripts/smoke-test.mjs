@@ -394,6 +394,12 @@ async function registerAndVerify(c, email, password) {
   await admin.patch(`/api/entities/ClinicSetting/${setting.id}`, { referral_base_url: "https://join.example.com/r/" });
   r = await anon.get("/api/config");
   ok(r.data.referralBaseUrl === "https://join.example.com", "config: a trailing /r/ is tolerated", JSON.stringify(r.data));
+  for (const legacy of ["https://sasha.ae/r/", "https://sasha.ae", "http://www.sasha.ae/r"]) {
+    await admin.patch(`/api/entities/ClinicSetting/${setting.id}`, { referral_base_url: legacy });
+    r = await anon.get("/api/config");
+    if (r.data.referralBaseUrl !== null) ok(false, `config ignores the old made-up default ${legacy}`, JSON.stringify(r.data));
+  }
+  ok(true, "config ignores the old made-up default domain");
   for (const bad of ["javascript:alert(1)", "http://evil.example", "ftp://x.y", "https://a b.c"]) {
     await admin.patch(`/api/entities/ClinicSetting/${setting.id}`, { referral_base_url: bad });
     r = await anon.get("/api/config");

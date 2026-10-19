@@ -8,7 +8,8 @@ export async function onRequestGet({ env }) {
   let row = {};
   try { row = (await entityStore(env, "ClinicSetting").filter({ setting_key: "default" }, { limit: 1 }))[0] || {}; } catch { /* no settings yet */ }
   const base = String(row.referral_base_url || "").trim().replace(/\/+$/, "").replace(/\/r$/, "");
-  const safe = /^https:\/\/[^\s/]+$/.test(base) || /^http:\/\/localhost(:\d+)?$/.test(base);
+  const placeholder = /^https?:\/\/(www\.)?sasha\.ae$/i.test(base); // an old made-up default that was saved by the Settings page, never a real domain
+  const safe = !placeholder && (/^https:\/\/[^\s/]+$/.test(base) || /^http:\/\/localhost(:\d+)?$/.test(base));
   return json(
     { referralBaseUrl: safe ? base : null, clinicName: row.clinic_name || ENTITIES.ClinicSetting.defaults.clinic_name || "Sasha Aesthetics" },
     200,

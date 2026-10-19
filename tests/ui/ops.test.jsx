@@ -161,3 +161,16 @@ describe('Partner accounts created by head office', () => {
     expect(cap.problems).toEqual([]); cap.restore()
   })
 })
+
+describe('Legacy placeholder domain', () => {
+  test('a saved made-up domain is not shown and does not change partner links', async () => {
+    await setting({ referral_base_url: 'https://sasha.ae/r/' })
+    await asUser(ADMIN)
+    await open('/admin/settings')
+    expect((await screen.findByPlaceholderText('https://join.yourdomain.com')).value).toBe('')
+    await open(`/admin/partners/${ids.partner.id}`)
+    await waitFor(() => expect(document.body.textContent).toContain(`${window.location.origin}/r/${ids.partner.referral_code}`), { timeout: 15000 })
+    expect(document.body.textContent).not.toContain('sasha.ae')
+    await setting({ referral_base_url: '' })
+  })
+})

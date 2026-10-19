@@ -27,6 +27,10 @@ const DEFAULTS = {
   whatsapp_template: "",
 };
 
+// An early default pointed links at a made-up domain; it must never be shown or kept as if it were a real choice.
+const PLACEHOLDER_DOMAIN = /^https?:\/\/(www\.)?sasha\.ae(\/r)?\/?$/i;
+const cleanSettings = (s) => (s && PLACEHOLDER_DOMAIN.test(s.referral_base_url || "") ? { ...s, referral_base_url: "" } : s);
+
 export default function Settings() {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,7 +43,7 @@ export default function Settings() {
       const page = await api.entities.ClinicSetting.filter({ setting_key: "default" }, { limit: 1 });
       const items = page.items || [];
       if (items.length > 0) {
-        setSettings(items[0]);
+        setSettings(cleanSettings(items[0]));
         setRecordId(items[0].id);
       } else {
         const created = await api.entities.ClinicSetting.create(DEFAULTS);
@@ -60,7 +64,7 @@ export default function Settings() {
     setSaving(true);
     try {
       const updated = await api.entities.ClinicSetting.update(recordId, settings);
-      setSettings(updated);
+      setSettings(cleanSettings(updated));
     } catch (e) {
       notifyError(e.message);
     } finally {

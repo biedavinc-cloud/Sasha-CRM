@@ -9,9 +9,9 @@ functions/api/users/    admin: list / change role / invite
 functions/api/fn/       business logic (functions/_fn/*): commissions, payouts, referral capture, GitHub
 migrations/             D1 schema
 src/api/client.js       frontend API client
-scripts/smoke-test.mjs  144 API checks (auth, RLS, field-level security, referral codes, notifications, money rules, rate limits…)
+scripts/smoke-test.mjs  145 API checks (auth, RLS, field-level security, referral codes, notifications, money rules, rate limits…)
 scripts/no-email-test.mjs  10 checks of onboarding without e-mail delivery
-tests/ui/               62 UI tests: the real <App/> in jsdom against the local server (auth, every admin/portal page, admin actions, partner link page, public form, accessibility scan)
+tests/ui/               63 UI tests: the real <App/> in jsdom against the local server (auth, every admin/portal page, admin actions, partner link page, public form, accessibility scan)
 ```
 
 ## Local development
